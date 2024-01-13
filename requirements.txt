@@ -1,0 +1,4 @@
+playwright
+aiogram
+requests
+environs
