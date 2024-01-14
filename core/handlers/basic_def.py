@@ -1,7 +1,9 @@
 import sqlite3
 from aiogram.types import Message
-from core.utils.pp_cheat import main
 from core.keyboards.reply import *
+from aiogram.fsm.context import FSMContext
+from core.utils.data_states import DataSteps
+from core.utils.pp_cheat import DoneCheat, main
 
 
 async def sqlbase(message: Message):
@@ -81,18 +83,28 @@ async def setting(message: Message):
                          reply_markup=sett)
 
 
-async def start_cheat(message: Message):
+async def start_cheat(message: Message, state: FSMContext):
     connection = sqlite3.connect('core/data/users.db')
     cursor = connection.cursor()
     cursor.execute("""SELECT login, password, proxy, fight, heal, item, item_val, catch, gender, pokebol, shine FROM profiles WHERE chat_id = ?""",
                    (message.chat.id,))
     login, password, proxy, fight, heal, item, item_val, catch, gender, pokebol, shine = cursor.fetchone()
-    await message.answer('Программа запущена с выбранными настройками, ожидайте результатов!')
+    await message.answer('Программа запущена с выбранными настройками, ожидайте результатов!', reply_markup=start_key)
     if proxy == 'Отсутствуют' or proxy is None:
         await message.answer('Вернитесь и укажите <b>прокси</b>, без них ваш аккаунт <b>рискует быть заблокированным.</b>')
     else:
-        await main(login, password, proxy, fight, item, item_val, catch, gender, pokebol, shine)
-
+        try:
+            await state.set_state(DataSteps.START)
+            await main(login, password, proxy, fight, item, item_val, catch, gender, pokebol, shine)
+        except DoneCheat as dc:
+            if len(str(dc)) > 4096:
+                await message.answer(f'{dc[:4095]}', reply_markup=menus)
+            else:
+                await message.answer(f'{dc}', reply_markup=menus)
+            await state.set_state(None)
+        except Exception as er:
+            await message.answer(f'Программа была остановлена по ошибке: \n ```{er}```', reply_markup=menus, parse_mode='MarkdownV2')
+            await state.set_state(None)
 
 
 async def none_msg(message: Message):

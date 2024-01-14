@@ -1,10 +1,10 @@
 import asyncio
 import logging
-from aiogram import Dispatcher
 from aiogram import F
-from aiogram.filters import CommandStart
-from core.handlers.basic_def import *
+from aiogram import Dispatcher
 from core.handlers.get_data import *
+from core.handlers.basic_def import *
+from aiogram.filters import CommandStart
 from core.utils.data_states import DataSteps
 
 
@@ -33,6 +33,7 @@ async def start():
     dp.message.register(answer, DataSteps.ANSW)
     dp.message.register(help, F.text == '🏳️Помощь')
     dp.message.register(start_cheat, F.text == '🕹Запуск')
+    dp.message.register(start_menu, DataSteps.START)
     dp.message.register(setting, F.text == '⚙Настройки')
     dp.message.register(fight, F.text == '⚔Бой')
     dp.message.register(get_fight, DataSteps.FIGHT)

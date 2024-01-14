@@ -77,10 +77,10 @@ async def get_proxy(message: Message, state: FSMContext):
         await account(message)
     else:
         try:
-            await message.answer('Выполняется проверка ваших прокси.')
+            await message.answer('Выполняется проверка ваших прокси. <i>(Максимальное время ожидания - 5 сек.)</i>')
             r = requests.get(url='https://www.httpbin.org/ip',
                              proxies={'http': f'{message.text}', 'https': f'{message.text}'},
-                             timeout=10)
+                             timeout=5)
             ip = message.text.split(':')
             if ip[0] in r.text:
                 await message.answer('Прокси приняты!', reply_markup=accou)
@@ -348,3 +348,10 @@ async def get_shines(message: Message, state: FSMContext):
         cursor.execute("""UPDATE profiles SET shine = ? WHERE chat_id = ?""", ('Отключено', message.chat.id,))
         connection.commit()
         await state.set_state(None)
+
+
+async def start_menu(message: Message, state: FSMContext):
+    if message.text == "⛔Остановить":
+        await message.answer('Эта команда в данный момент не работает...', reply_markup=start_key)
+    else:
+        await message.answer('Такая команда у меня отсутствует...', reply_markup=start_key)

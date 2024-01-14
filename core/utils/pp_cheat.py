@@ -2,6 +2,11 @@ from playwright.async_api import async_playwright
 from core.utils.pp_def import auth, get_fight, class_gender, catch_pokebol, check_place, shines, catches, fights, runners, healing
 
 
+class DoneCheat(Exception):
+    def __init__(self, text):
+        self.txt = text
+
+
 async def main(login, password, proxy, fight, item, item_val, catch, gender, pokebol, shine, f=0):
     async with async_playwright() as p:
         if fight == 'Отсутствует' or fight < 0:
@@ -11,7 +16,7 @@ async def main(login, password, proxy, fight, item, item_val, catch, gender, pok
         browser = await p.chromium.launch(headless=False, channel='chrome',
                                           executable_path='C:\\Program Files (x86)\\Google\\Chrome\\Application\\chrome.exe',
                                           args=['--window-size'], proxy={"server": "per-context"})
-        context = await browser.new_context(proxy={"server": f"{proxy}"})
+        context = await browser.new_context(viewport={'width': 1366, 'height': 668}, proxy={"server": f"{proxy}"})
         page = await context.new_page()
         await auth(browser, page, login, password)
         gender = await class_gender(gender)
@@ -30,7 +35,7 @@ async def main(login, password, proxy, fight, item, item_val, catch, gender, pok
                 f, pp, hp_bar = await fights(page, f)
                 await healing(page, pp, hp_bar, p)
                 if f >= fight:
-                    break
+                    raise DoneCheat('Программа окончила своё выполнение!')
 
 
 async def close_page(page):
