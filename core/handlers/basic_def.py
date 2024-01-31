@@ -25,7 +25,7 @@ async def menu(message: Message):
 
 
 async def help(message: Message):
-    await message.answer('Ссылка на статью с разбором всего!')
+    await message.answer('Ссылка на гайд по боту, скоро появится!')
 
 
 async def clear_ac(message: Message):
@@ -89,11 +89,11 @@ async def start_cheat(message: Message, state: FSMContext):
     cursor.execute("""SELECT login, password, proxy, fight, heal, item, item_val, catch, gender, pokebol, shine FROM profiles WHERE chat_id = ?""",
                    (message.chat.id,))
     login, password, proxy, fight, heal, item, item_val, catch, gender, pokebol, shine = cursor.fetchone()
-    await message.answer('Программа запущена с выбранными настройками, ожидайте результатов!', reply_markup=start_key)
-    if proxy == 'Отсутствуют' or proxy is None:
+    if proxy == 'Отсутствует' or proxy is None:
         await message.answer('Вернитесь и укажите <b>прокси</b>, без них ваш аккаунт <b>рискует быть заблокированным.</b>')
     else:
         try:
+            await message.answer('Программа запущена с выбранными настройками, ожидайте результатов!', reply_markup=start_key)
             await state.set_state(DataSteps.START)
             await main(login, password, proxy, fight, item, item_val, catch, gender, pokebol, shine)
         except DoneCheat as dc:

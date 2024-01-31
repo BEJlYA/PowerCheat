@@ -203,8 +203,9 @@ async def get_fight(message: Message, state: FSMContext):
 
 
 async def heal(message: Message, state: FSMContext):
-    await message.answer('Включить авто-лечение?', reply_markup=onoff)
-    await state.set_state(DataSteps.HEAL)
+    await message.answer('Функция отключена...', reply_markup=sett)
+    # await message.answer('Включить авто-лечение?', reply_markup=onoff)
+    # await state.set_state(DataSteps.HEAL)
 
 
 async def get_heal(message: Message, state: FSMContext):
@@ -225,8 +226,9 @@ async def get_heal(message: Message, state: FSMContext):
 
 
 async def drop(message: Message, state: FSMContext):
-    await message.answer('Введите предмет/ы из покемона:', reply_markup=inputs)
-    await state.set_state(DataSteps.ITEM)
+    await message.answer('Скоро появится, ожидайте новостей!', reply_markup=sett)
+    # await message.answer('Введите предмет/ы из покемона:', reply_markup=inputs)
+    # await state.set_state(DataSteps.ITEM)
 
 
 async def get_item(message: Message, state: FSMContext):
