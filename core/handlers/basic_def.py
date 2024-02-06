@@ -97,13 +97,13 @@ async def start_cheat(message: Message, state: FSMContext):
             await state.set_state(DataSteps.START)
             await main(login, password, proxy, fight, item, item_val, catch, gender, pokebol, shine)
         except DoneCheat as dc:
-            if len(str(dc)) > 4096:
-                await message.answer(f'{dc[:4095]}', reply_markup=menus)
-            else:
-                await message.answer(f'{dc}', reply_markup=menus)
+            await message.answer(f'{dc}', reply_markup=menus)
             await state.set_state(None)
         except Exception as er:
-            await message.answer(f'Программа была остановлена по ошибке: \n ```{er}```', reply_markup=menus, parse_mode='MarkdownV2')
+            if len(str(er)) > 3500:
+                await message.answer(f'Программа была остановлена по ошибке: \n ```{er[:3500]}```', reply_markup=menus, parse_mode='MarkdownV2')
+            else:
+                await message.answer(f'Программа была остановлена по ошибке: \n ```{er}```', reply_markup=menus, parse_mode='MarkdownV2')
             await state.set_state(None)
 
 

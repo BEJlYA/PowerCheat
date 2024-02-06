@@ -11,8 +11,8 @@ from core.utils.data_states import DataSteps
 async def start():
     logging.basicConfig(level=logging.INFO,
                         format='[%(levelname)s] [%(asctime)s] [%(name)s] '
-                               '[%(filename)s]-[%(funcName)s]-[%(lineno)d]: %(message)s'
-                        )
+                               '[%(filename)s]-[%(funcName)s]-[%(lineno)d]: %(message)s',
+                        filename='logs/log.txt')
     bot = Bot(token=settings.bots.bot_token, parse_mode='HTML')
     dp = Dispatcher()
     dp.startup.register(start_bot)

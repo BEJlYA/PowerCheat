@@ -194,12 +194,15 @@ async def get_fight(message: Message, state: FSMContext):
         await state.set_state(None)
         await setting(message)
     else:
-        await message.answer('Параметр принят!', reply_markup=sett)
-        connection = sqlite3.connect('core/data/users.db')
-        cursor = connection.cursor()
-        cursor.execute("""UPDATE profiles SET fight = ? WHERE chat_id = ?""", (message.text, message.chat.id,))
-        connection.commit()
-        await state.set_state(None)
+        if message.text.isdigit():
+            await message.answer('Параметр принят!', reply_markup=sett)
+            connection = sqlite3.connect('core/data/users.db')
+            cursor = connection.cursor()
+            cursor.execute("""UPDATE profiles SET fight = ? WHERE chat_id = ?""", (message.text, message.chat.id,))
+            connection.commit()
+            await state.set_state(None)
+        else:
+            await message.answer('Требуется ввести числовое значение!', reply_markup=inputs)
 
 
 async def heal(message: Message, state: FSMContext):
