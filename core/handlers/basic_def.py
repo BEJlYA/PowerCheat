@@ -7,7 +7,7 @@ from core.utils.pp_cheat import DoneCheat, main
 
 
 async def sqlbase(message: Message):
-    connection = sqlite3.connect('core/data/users.db')
+    connection = sqlite3.connect('data/users.db')
     cursor = connection.cursor()
     cursor.execute("""SELECT chat_id FROM profiles WHERE chat_id = ?""", (message.chat.id,))
     if cursor.fetchone() is None:
@@ -20,16 +20,12 @@ async def start_msg(message: Message):
     await sqlbase(message)
 
 
-async def menu(message: Message):
-    await message.answer('Вы вернулись в Меню.', reply_markup=menus)
-
-
 async def help(message: Message):
     await message.answer('Ссылка на гайд по боту, скоро появится!')
 
 
 async def clear_ac(message: Message):
-    connection = sqlite3.connect('core/data/users.db')
+    connection = sqlite3.connect('data/users.db')
     cursor = connection.cursor()
     cursor.execute("""UPDATE profiles SET login = 'Отсутствует', password = 'Отсутствует', proxy = 'Отсутствует' WHERE chat_id = ?""",
                    (message.chat.id,))
@@ -38,7 +34,7 @@ async def clear_ac(message: Message):
 
 
 async def clear_st(message: Message):
-    connection = sqlite3.connect('core/data/users.db')
+    connection = sqlite3.connect('data/users.db')
     cursor = connection.cursor()
     cursor.execute(
         """UPDATE profiles SET fight = 'Отсутствует', heal = 'Отключено', item = 'Отсутствует', item_val = 'Отсутствует', catch = 'Отсутствует', gender = 'Отсутствует', pokebol = 'Отсутствует', shine = 'Отключено' WHERE chat_id = ?""",
@@ -48,12 +44,12 @@ async def clear_st(message: Message):
 
 
 async def account(message: Message):
-    connection = sqlite3.connect('core/data/users.db')
+    connection = sqlite3.connect('data/users.db')
     cursor = connection.cursor()
     cursor.execute("""SELECT login, password, proxy FROM profiles WHERE chat_id = ?""",
                    (message.chat.id,))
     login, password, proxy = cursor.fetchone()
-    if not password == 'Отсутствуют':
+    if not password == 'Отсутствует':
         hid_pass = password[3:][:-3].replace(password[3:][:-3],
                                              password[:3] + '*' * len(password[3:][:-3]) + password[3:][-3:])
     else:
@@ -66,7 +62,7 @@ async def account(message: Message):
 
 
 async def setting(message: Message):
-    connection = sqlite3.connect('core/data/users.db')
+    connection = sqlite3.connect('data/users.db')
     cursor = connection.cursor()
     cursor.execute("""SELECT fight, heal, item, item_val, catch, gender, pokebol, shine FROM profiles WHERE chat_id = ?""",
                    (message.chat.id,))
@@ -84,16 +80,16 @@ async def setting(message: Message):
 
 
 async def start_cheat(message: Message, state: FSMContext):
-    connection = sqlite3.connect('core/data/users.db')
+    connection = sqlite3.connect('data/users.db')
     cursor = connection.cursor()
     cursor.execute("""SELECT login, password, proxy, fight, heal, item, item_val, catch, gender, pokebol, shine FROM profiles WHERE chat_id = ?""",
                    (message.chat.id,))
     login, password, proxy, fight, heal, item, item_val, catch, gender, pokebol, shine = cursor.fetchone()
-    if proxy == 'Отсутствует' or proxy is None:
+    if proxy == 'Отсутствуют' or proxy is None:
         await message.answer('Вернитесь и укажите <b>прокси</b>, без них ваш аккаунт <b>рискует быть заблокированным.</b>')
     else:
         try:
-            await message.answer('Программа запущена с выбранными настройками, ожидайте результатов!', reply_markup=start_key)
+            await message.answer('Программа запущена с выбранными настройками, ожидайте результатов!')
             await state.set_state(DataSteps.START)
             await main(login, password, proxy, fight, item, item_val, catch, gender, pokebol, shine)
         except DoneCheat as dc:
@@ -101,9 +97,9 @@ async def start_cheat(message: Message, state: FSMContext):
             await state.set_state(None)
         except Exception as er:
             if len(str(er)) > 3500:
-                await message.answer(f'Программа была остановлена по ошибке: \n ```{er[:3500]}```', reply_markup=menus, parse_mode='MarkdownV2')
+                await message.answer(f'Программа была остановлена по ошибке: \n ``` {er[:3500]} ```', reply_markup=menus, parse_mode='MarkdownV2')
             else:
-                await message.answer(f'Программа была остановлена по ошибке: \n ```{er}```', reply_markup=menus, parse_mode='MarkdownV2')
+                await message.answer(f'Программа была остановлена по ошибке: \n ``` {er} ```', reply_markup=menus, parse_mode='MarkdownV2')
             await state.set_state(None)
 
 

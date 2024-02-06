@@ -25,4 +25,4 @@ def get_settings(path: str):
     )
 
 
-settings = get_settings('core/data/input.txt')
+settings = get_settings('data/input.txt')

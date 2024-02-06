@@ -1,4 +1,4 @@
-from core.data.other import *
+from data.other import *
 from queue import Queue
 
 
@@ -27,7 +27,7 @@ async def class_gender(gender):
 
 
 async def catch_pokebol(pokebol):
-    if not pokebol.lower() == 'отсутствует':
+    if pokebol.lower() in id_pokebols:
         path = f"{id_pokebols[pokebol.lower()]}"
         return path
     else:
@@ -78,7 +78,7 @@ async def check_pokebol(page, namepok, p):
     for key in sorted(priority, key=priority.get):
         if key in src:
             if await page.is_visible('.Battle'):
-                while not await page.is_visible(f'//*[@class="noty plus"]/div[3]/div[1]/span[@class="pok0-color" and contains(text(),"{namepok}")]') and await page.is_visible('.Battle'):
+                while not await page.is_visible(f'//*[@class="noty plus"]/div[3]/div[1]/span[@class="pok1-color" and contains(text(),"{namepok}")] or @class="pok0-color" and contains(text(),"{namepok}")]') and await page.is_visible('.Battle'):
                     if await page.is_visible(f"//img[@src='{key}']"):
                         await page.click(f"//img[@src='{key}']")
                     else:
@@ -245,23 +245,23 @@ async def get_locate(page):
             region = await page.locator("//*[@id='window_games']/div/div[1]/div/div[2]/div").get_attribute('class')
         region = region[:-3]
         if region == 'Name LocationRegionBg1':  # Канто
-            region = 'core/data/map_kanto.txt'
+            region = 'data/map_kanto.txt'
             return location_me, region
         elif region == 'Name LocationRegionBg2':  # Джото
-            region = 'core/data/map_joto.txt'
+            region = 'data/map_joto.txt'
             return location_me, region
         elif region == 'Name LocationRegionBg7':  # Калос
-            region = 'core/data/map_kalos.txt'
+            region = 'data/map_kalos.txt'
             return location_me, region
         elif region == 'Name LocationRegionBg9':  # Алола
-            region = 'core/data/map_alola.txt'  # алола
+            region = 'data/map_alola.txt'  # алола
             return location_me, region
         else:  # Прочие локи с покецентром
             region = 'core/data/map_other.txt'
             return location_me, region
     else:
         location_me = 'Паллет'
-        region = 'core/data/map_kanto.txt'
+        region = 'data/map_kalos.txt'
         return location_me, region
 
 

@@ -1,4 +1,4 @@
-/core/data/input.txt
+/data/input.txt
+/logs/log.txt
 /venv/
 /.idea/
-/logs/log.txt

@@ -190,11 +190,3 @@ pokebols = ReplyKeyboardMarkup(keyboard=[
         )
     ]
 ], resize_keyboard=True)
-
-start_key = ReplyKeyboardMarkup(keyboard=[
-    [
-        KeyboardButton(
-            text='⛔Остановить',
-        )
-    ]
-], resize_keyboard=True)
