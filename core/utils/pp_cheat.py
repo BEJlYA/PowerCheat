@@ -1,5 +1,6 @@
 from playwright.async_api import async_playwright
 from core.utils.pp_def import auth, get_fight, class_gender, catch_pokebol, check_place, shines, catches, fights, runners, healing
+from aiogram.fsm.context import FSMContext
 
 
 class DoneCheat(Exception):
@@ -7,7 +8,7 @@ class DoneCheat(Exception):
         self.txt = text
 
 
-async def main(login, password, proxy, fight, item, item_val, catch, gender, pokebol, shine, f=0):
+async def main(login, password, proxy, fight, item, item_val, catch, gender, pokebol, shine, state: FSMContext, f=0):
     async with async_playwright() as p:
         if fight == 'Отсутствует' or fight < 0:
             fight = 200
@@ -18,6 +19,8 @@ async def main(login, password, proxy, fight, item, item_val, catch, gender, pok
                                           args=['--window-size'], proxy={"server": "per-context"})
         context = await browser.new_context(viewport={'width': 1366, 'height': 668}, proxy={"server": f"{proxy}"})
         page = await context.new_page()
+        await state.update_data(p_browser=browser)
+        await state.update_data(p_page=page)
         await auth(browser, page, login, password)
         gender = await class_gender(gender)
         path = await catch_pokebol(pokebol)
@@ -36,7 +39,3 @@ async def main(login, password, proxy, fight, item, item_val, catch, gender, pok
                 await healing(page, pp, hp_bar, p)
                 if f >= fight:
                     raise DoneCheat('Программа окончила своё выполнение!')
-
-
-async def close_page(page):
-    await page.close()

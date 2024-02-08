@@ -1,4 +1,4 @@
 /data/input.txt
-/logs/log.txt
-/venv/
-/.idea/
+/logs/project.log
+venv/
+.idea/

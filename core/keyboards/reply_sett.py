@@ -1,83 +1,5 @@
 from aiogram.types import ReplyKeyboardMarkup, KeyboardButton
 
-menus = ReplyKeyboardMarkup(keyboard=[
-    [
-        KeyboardButton(
-            text='👤Аккаунт'
-        )
-    ],
-    [
-        KeyboardButton(
-            text='📘Обратная связь'
-        ),
-        KeyboardButton(
-            text='⚙Настройки'
-        ),
-        KeyboardButton(
-            text='🏳️Помощь'
-        )
-    ],
-    [
-        KeyboardButton(
-            text='🕹Запуск'
-        )
-    ]
-], resize_keyboard=True)
-
-accou = ReplyKeyboardMarkup(keyboard=[
-    [
-        KeyboardButton(
-            text='✏Логин'
-        ),
-        KeyboardButton(
-            text='🔐Пароль'
-        )
-    ],
-    [
-        KeyboardButton(
-            text='🤖Прокси'
-        ),
-        KeyboardButton(
-            text='◀Вернуться'
-        )
-    ],
-    [
-        KeyboardButton(
-            text='♻Очистить Аккаунт'
-        )
-    ]
-], resize_keyboard=True)
-
-febck = ReplyKeyboardMarkup(keyboard=[
-    [
-        KeyboardButton(
-            text='◀Вернуться'
-        ),
-    ]
-], resize_keyboard=True)
-
-answ = ReplyKeyboardMarkup(keyboard=[
-    [
-        KeyboardButton(
-            text='📡Ответить'
-        ),
-        KeyboardButton(
-            text='◀Вернуться'
-        ),
-    ]
-], resize_keyboard=True)
-
-ansfd = ReplyKeyboardMarkup(keyboard=[
-    [
-        KeyboardButton(
-            text='‼Удалить'
-        ),
-        KeyboardButton(
-          text='◀Вернуться'
-        ),
-    ]
-], resize_keyboard=True)
-
 sett = ReplyKeyboardMarkup(keyboard=[
     [
         KeyboardButton(
@@ -104,17 +26,6 @@ sett = ReplyKeyboardMarkup(keyboard=[
     [
         KeyboardButton(
             text='♻Oчистить всё'
-        )
-    ]
-], resize_keyboard=True)
-
-inputs = ReplyKeyboardMarkup(keyboard=[
-    [
-        KeyboardButton(
-            text='♻Очистить'
-        ),
-        KeyboardButton(
-            text='◀Назад'
         )
     ]
 ], resize_keyboard=True)
@@ -150,7 +61,7 @@ genders = ReplyKeyboardMarkup(keyboard=[
             text='Любой'
         ),
         KeyboardButton(
-            text='◀Вернуться'
+            text='◀Назад'
         )
     ]
 ], resize_keyboard=True)

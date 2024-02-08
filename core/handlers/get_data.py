@@ -2,8 +2,11 @@ import sqlite3
 import requests
 from aiogram import Bot
 from aiogram.types import Message
-from core.keyboards.reply import *
 from core.settings import settings
+from core.keyboards.reply_fb import *
+from core.keyboards.reply_sett import *
+from core.keyboards.reply_menu import *
+from core.keyboards.reply_acc import accou
 from aiogram.fsm.context import FSMContext
 from core.utils.data_states import DataSteps
 from core.handlers.basic_def import account, setting
@@ -355,3 +358,14 @@ async def get_shines(message: Message, state: FSMContext):
         await state.set_state(None)
     else:
         await message.answer('Такая команда у меня отсутствует...', reply_markup=onoff)
+
+
+async def stop_browser(message: Message, state: FSMContext):
+    if message.text == '⛔Остановить':
+        date = await state.get_data()
+        browser = date['p_browser']
+        await browser.close()
+        await message.answer('Программа остановлена!', reply_markup=menus)
+        await state.set_state(None)
+    else:
+        await message.answer('Такая команда у меня отсутствует...', reply_markup=stop)
