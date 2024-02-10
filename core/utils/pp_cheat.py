@@ -1,6 +1,5 @@
 from playwright.async_api import async_playwright
-from core.utils.pp_def import auth, get_fight, class_gender, catch_pokebol, check_place, shines, catches, fights, runners, healing
-from aiogram.fsm.context import FSMContext
+from core.utils.pp_def import auth, target, get_fight, class_gender, catch_pokebol, check_place, shines, catches, fights, runners, healing
 
 
 class DoneCheat(Exception):
@@ -8,7 +7,7 @@ class DoneCheat(Exception):
         self.txt = text
 
 
-async def main(login, password, proxy, fight, item, item_val, catch, gender, pokebol, shine, state: FSMContext, f=0):
+async def main(login, password, proxy, fight, items, catch, gender, pokebol, shine, state, f=0):
     async with async_playwright() as p:
         if fight == 'Отсутствует' or fight < 0:
             fight = 200
@@ -20,8 +19,8 @@ async def main(login, password, proxy, fight, item, item_val, catch, gender, pok
         context = await browser.new_context(viewport={'width': 1366, 'height': 668}, proxy={"server": f"{proxy}"})
         page = await context.new_page()
         await state.update_data(p_browser=browser)
-        await state.update_data(p_page=page)
         await auth(browser, page, login, password)
+        target_item = await target(items)
         gender = await class_gender(gender)
         path = await catch_pokebol(pokebol)
         await page.click('//div[@class="Button NoActive" and @onclick="PP.fight.setHunt(this);"]')
@@ -35,7 +34,7 @@ async def main(login, password, proxy, fight, item, item_val, catch, gender, pok
                 f, p = await runners(page, namepok, f, p)
                 f, p = await shines(page, shine, namepok, f, p)
                 f, p = await catches(page, catch, namepok, gender, gendcat, path, f, p)
-                f, pp, hp_bar = await fights(page, f)
+                f, pp, hp_bar = await fights(page, target_item, f)
                 await healing(page, pp, hp_bar, p)
-                if f >= fight:
+                if f >= fight and all(int(value) <= 0 for value in target_item.values()):
                     raise DoneCheat('Программа окончила своё выполнение!')

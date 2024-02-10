@@ -74,7 +74,7 @@ async def get_proxy(message: Message, state: FSMContext):
     elif message.text == '♻Очистить':
         connection = sqlite3.connect('data/users.db')
         cursor = connection.cursor()
-        cursor.execute("""UPDATE profiles SET proxy = 'Отсутствует' WHERE chat_id = ?""", (message.chat.id,))
+        cursor.execute("""UPDATE profiles SET proxy = 'Отсутствуют' WHERE chat_id = ?""", (message.chat.id,))
         connection.commit()
         await state.set_state(None)
         await account(message)
@@ -232,9 +232,8 @@ async def get_heal(message: Message, state: FSMContext):
 
 
 async def drop(message: Message, state: FSMContext):
-    await message.answer('Скоро появится, ожидайте новостей!', reply_markup=sett)
-    # await message.answer('Введите предмет/ы из покемона:', reply_markup=inputs)
-    # await state.set_state(DataSteps.ITEM)
+    await message.answer('Введите предмет/ы из покемона:', reply_markup=inputs)
+    await state.set_state(DataSteps.ITEM)
 
 
 async def get_item(message: Message, state: FSMContext):
@@ -244,36 +243,15 @@ async def get_item(message: Message, state: FSMContext):
     elif message.text == '♻Очистить':
         connection = sqlite3.connect('data/users.db')
         cursor = connection.cursor()
-        cursor.execute("""UPDATE profiles SET item = 'Отсутствует', item_val = 'Отсутствует' WHERE chat_id = ?""", (message.chat.id,))
+        cursor.execute("""UPDATE profiles SET items = 'Отсутствует' WHERE chat_id = ?""", (message.chat.id,))
         connection.commit()
         await state.set_state(None)
         await setting(message)
     else:
-        await message.answer('Предмет/ы приняты!\n'
-                             'Введите кол-во предмета:')
+        await message.answer('Значение принято!', reply_markup=sett)
         connection = sqlite3.connect('data/users.db')
         cursor = connection.cursor()
-        cursor.execute("""UPDATE profiles SET item = ? WHERE chat_id = ?""", (message.text, message.chat.id,))
-        connection.commit()
-        await state.set_state(DataSteps.VAl)
-
-
-async def get_val(message: Message, state: FSMContext):
-    if message.text == '◀Назад':
-        await state.set_state(None)
-        await setting(message)
-    elif message.text == '♻Очистить':
-        await state.set_state(None)
-        connection = sqlite3.connect('data/users.db')
-        cursor = connection.cursor()
-        cursor.execute("""UPDATE profiles SET item_val = 'Отсутствует' WHERE chat_id = ?""", (message.chat.id,))
-        connection.commit()
-        await setting(message)
-    else:
-        await message.answer('Кол-во принято!', reply_markup=sett)
-        connection = sqlite3.connect('data/users.db')
-        cursor = connection.cursor()
-        cursor.execute("""UPDATE profiles SET item_val = ? WHERE chat_id = ?""", (message.text, message.chat.id,))
+        cursor.execute("""UPDATE profiles SET items = ? WHERE chat_id = ?""", (message.text, message.chat.id,))
         connection.commit()
         await state.set_state(None)
 

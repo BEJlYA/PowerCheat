@@ -45,7 +45,6 @@ async def start():
     dp.message.register(get_heal, DataSteps.HEAL)
     dp.message.register(drop, F.text == '🎲Дроп')
     dp.message.register(get_item, DataSteps.ITEM)
-    dp.message.register(get_val, DataSteps.VAl)
     dp.message.register(catch, F.text == '📥Ловля')
     dp.message.register(get_pok, DataSteps.POK)
     dp.message.register(get_gender, DataSteps.GENDER)

@@ -11,7 +11,6 @@ class DataSteps(StatesGroup):
     FIGHT = State()
     HEAL = State()
     ITEM = State()
-    VAl = State()
     POK = State()
     GENDER = State()
     BOL = State()

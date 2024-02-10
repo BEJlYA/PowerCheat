@@ -30,7 +30,7 @@ async def help(message: Message):
 async def clear_ac(message: Message):
     connection = sqlite3.connect('data/users.db')
     cursor = connection.cursor()
-    cursor.execute("""UPDATE profiles SET login = 'Отсутствует', password = 'Отсутствует', proxy = 'Отсутствует' WHERE chat_id = ?""",
+    cursor.execute("""UPDATE profiles SET login = 'Отсутствует', password = 'Отсутствует', proxy = 'Отсутствуют' WHERE chat_id = ?""",
                    (message.chat.id,))
     connection.commit()
     await message.answer('Все параметры очищенны!', reply_markup=accou)
@@ -40,7 +40,7 @@ async def clear_st(message: Message):
     connection = sqlite3.connect('data/users.db')
     cursor = connection.cursor()
     cursor.execute(
-        """UPDATE profiles SET fight = 'Отсутствует', heal = 'Отключено', item = 'Отсутствует', item_val = 'Отсутствует', catch = 'Отсутствует', gender = 'Отсутствует', pokebol = 'Отсутствует', shine = 'Отключено' WHERE chat_id = ?""",
+        """UPDATE profiles SET fight = 'Отсутствует', heal = 'Отключено', items = 'Отсутствует', catch = 'Отсутствует', gender = 'Отсутствует', pokebol = 'Отсутствует', shine = 'Отключено' WHERE chat_id = ?""",
         (message.chat.id,))
     connection.commit()
     await message.answer('Все параметры очищенны!', reply_markup=sett)
@@ -67,14 +67,13 @@ async def account(message: Message):
 async def setting(message: Message):
     connection = sqlite3.connect('data/users.db')
     cursor = connection.cursor()
-    cursor.execute("""SELECT fight, heal, item, item_val, catch, gender, pokebol, shine FROM profiles WHERE chat_id = ?""",
+    cursor.execute("""SELECT fight, heal, items, catch, gender, pokebol, shine FROM profiles WHERE chat_id = ?""",
                    (message.chat.id,))
-    fight, heal, item, item_val, catch, gender, pokebol, shine = cursor.fetchone()
+    fight, heal, items, catch, gender, pokebol, shine = cursor.fetchone()
     await message.answer(f'<u>⚙Настройки:</u>\n\n'
                          f'⚔Бой: <i><b>{fight}</b></i>\n'
                          f'⛑Лечение: <i><b>{heal}</b></i>\n'
-                         f'🎲Дроп: <i><b>{item}</b></i>\n'
-                         f'      🔻Кол-во: <i><b>{item_val}</b></i>\n'
+                         f'🎲Дроп: <i><b>{items}</b></i>\n'
                          f'📥Ловля: <i><b>{catch}</b></i>\n'
                          f'      🔻Гендер: <i><b>{gender}</b></i>\n'
                          f'      🔻Бол: <i><b>{pokebol}</b></i>\n'
@@ -85,7 +84,7 @@ async def setting(message: Message):
 async def start_cheat(message: Message, state: FSMContext):
     connection = sqlite3.connect('data/users.db')
     cursor = connection.cursor()
-    cursor.execute("""SELECT login, password, proxy, fight, heal, item, item_val, catch, gender, pokebol, shine FROM profiles WHERE chat_id = ?""",
+    cursor.execute("""SELECT login, password, proxy, fight, heal, items, catch, gender, pokebol, shine FROM profiles WHERE chat_id = ?""",
                    (message.chat.id,))
     login, password, proxy, fight, heal, item, item_val, catch, gender, pokebol, shine = cursor.fetchone()
     if proxy == 'Отсутствуют' or proxy is None:

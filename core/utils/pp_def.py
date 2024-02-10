@@ -17,6 +17,18 @@ async def incr(dialog, browser):
         await browser.close()
 
 
+async def target(items):
+    target_item = {}
+    if not items == 'Отсутствует':
+        item = items.lower().split(', ')
+        for i in item:
+            key, value = i.split(':')
+            target_item.update({' ' + key: int(value)})
+        return target_item
+    else:
+        return target_item
+
+
 async def class_gender(gender):
     if gender.lower() in genderly:
         gender = genderly[gender.lower()]
@@ -116,7 +128,7 @@ async def catches(page, catch, namepok, gender, gendcat, path, f, p):
         return f, p
 
 
-async def fights(page, f, pp=2, hp_bar=41):
+async def fights(page, target_item, f, pp=2, hp_bar=41):
     if await page.is_visible('.Battle'):
         while not await page.is_visible("//*[@class='noty minipok']"):
             if await page.is_visible("//div[@class=' Move']//div[@class='Name MoveCategory1' or @class='Name MoveCategory2']"):
@@ -128,6 +140,7 @@ async def fights(page, f, pp=2, hp_bar=41):
                 await page.click("//*[@id='battleMap']/div/div[4]/div[3]/div[3]/div[4]")
                 await check_exaut(page)
                 return f, pp, hp_bar
+        await drop(page, target_item)
         f += 1
         return f, pp, hp_bar
     else:
@@ -148,6 +161,21 @@ async def get_attr_heal(page, pp=0):
 async def check_exaut(page):
     if await page.is_visible("//*[@id='battleMap']/div/div[4]/div[3]/div[3]/div[5][@style='display: inline-block;']"):
         await page.click("//*[@id='battleMap']/div/div[4]/div[3]/div[3]/div[5][@style='display: inline-block;']")
+
+
+async def drop(page, target_item):
+    if not len(target_item) == 0:
+        noty_items = await page.query_selector_all('//*[@class="noty plus"]/div[3]/child::div[@class="Step"]')
+        for noty_i in noty_items:
+            noty_i_text = await noty_i.text_content()
+            if ' x' in noty_i_text:
+                key, value = noty_i_text.lower().split(' x')
+                target_item.update({key: int(target_item.get(key)) - int(value)})
+            else:
+                try:
+                    target_item.update({noty_i_text: int(target_item.get(noty_i_text)) - 1})
+                except TypeError:
+                    pass
 
 
 async def healing(page, pp, hp_bar, p):
