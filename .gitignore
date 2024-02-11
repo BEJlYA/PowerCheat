@@ -1,4 +1,5 @@
 /data/input.txt
+/data/users.db
 /logs/project.log
 venv/
 .idea/

@@ -1,17 +1,26 @@
 import sqlite3
 import logging
 from aiogram.types import Message
+from core.utils.pp_cheat import main
+from core.utils.pp_cheat import DoneCheat
 from core.keyboards.reply_acc import accou
 from core.keyboards.reply_sett import sett
 from aiogram.fsm.context import FSMContext
-from core.keyboards.reply_menu import menus, stop
 from core.utils.data_states import DataSteps
-from core.utils.pp_cheat import DoneCheat, main
+from core.keyboards.reply_menu import menus, stop
 
 
 async def sqlbase(message: Message):
     connection = sqlite3.connect('data/users.db')
     cursor = connection.cursor()
+    cursor.execute("""CREATE TABLE IF NOT EXISTS profiles(chat_id  integer not null constraint data_pk primary key,
+                                            login    TEXT    default 'Отсутствует', password TEXT    default 'Отсутствует',
+                                            proxy    TEXT    default 'Отсутствуют', fight    integer default 'Отсутствует',
+                                            heal     TEXT    default 'Отключено', items    TEXT    default 'Отсутствует',
+                                            catch    TEXT    default 'Отсутствует', shine    TEXT    default 'Отключено',
+                                            gender   TEXT    default 'Отсутствует', pokebol  TEXT    default 'Отсутствует')""")
+    cursor.execute("""CREATE TABLE IF NOT EXISTS feedback(message INTEGER, user INTEGER);""")
+    connection.commit()
     cursor.execute("""SELECT chat_id FROM profiles WHERE chat_id = ?""", (message.chat.id,))
     if cursor.fetchone() is None:
         cursor.execute("""INSERT INTO profiles (chat_id) VALUES (?)""", (message.chat.id,))
@@ -86,7 +95,7 @@ async def start_cheat(message: Message, state: FSMContext):
     cursor = connection.cursor()
     cursor.execute("""SELECT login, password, proxy, fight, heal, items, catch, gender, pokebol, shine FROM profiles WHERE chat_id = ?""",
                    (message.chat.id,))
-    login, password, proxy, fight, heal, items, item_val, catch, gender, pokebol, shine = cursor.fetchone()
+    login, password, proxy, fight, heal, items, catch, gender, pokebol, shine = cursor.fetchone()
     if proxy == 'Отсутствуют' or proxy is None:
         await message.answer(
             'Вернитесь и укажите <b>прокси</b>, без них ваш аккаунт <b>рискует быть заблокированным.</b>')
