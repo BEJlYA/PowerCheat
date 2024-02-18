@@ -1,6 +1,8 @@
 import sqlite3
 import logging
 from aiogram.types import Message
+from playwright._impl._errors import TargetClosedError
+
 from core.utils.pp_cheat import main
 from core.utils.pp_cheat import DoneCheat
 from core.keyboards.reply_acc import accou
@@ -106,6 +108,9 @@ async def start_cheat(message: Message, state: FSMContext):
             await main(login, password, proxy, fight, items, catch, gender, pokebol, shine, state)
         except DoneCheat as dc:
             await message.answer(f'{dc}', reply_markup=menus)
+            await state.set_state(None)
+        except TargetClosedError:
+            await message.answer('Программа остановлена!', reply_markup=menus)
             await state.set_state(None)
         except Exception as er:
             logging.error(str(er))

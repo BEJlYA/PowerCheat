@@ -343,7 +343,5 @@ async def stop_browser(message: Message, state: FSMContext):
         date = await state.get_data()
         browser = date['p_browser']
         await browser.close()
-        await message.answer('Программа остановлена!', reply_markup=menus)
-        await state.set_state(None)
     else:
         await message.answer('Такая команда у меня отсутствует...', reply_markup=stop)
