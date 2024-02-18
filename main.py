@@ -6,6 +6,7 @@ from core.handlers.basic_def import *
 from aiogram.filters import CommandStart
 from core.utils.data_states import DataSteps
 from aiogram.fsm.storage.memory import MemoryStorage
+# test
 
 
 async def start():
