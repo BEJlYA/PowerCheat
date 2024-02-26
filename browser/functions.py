@@ -4,7 +4,6 @@ from queue import Queue
 
 async def auth(browser, page, login, password):
     await page.goto('https://pokepower.ru', timeout=0)
-    await page.click('.Auth')
     await page.type('#authLogin', login)
     await page.type('#authPassword', password)
     page.once("dialog", lambda dialog: incr(dialog, browser))
@@ -90,7 +89,7 @@ async def check_pokebol(page, namepok, p):
     for key in sorted(priority, key=priority.get):
         if key in src:
             if await page.is_visible('.Battle'):
-                while not await page.is_visible(f'//*[@class="noty plus"]/div[3]/div[1]/span[@class="pok1-color" and contains(text(),"{namepok}")] or @class="pok0-color" and contains(text(),"{namepok}")]') and await page.is_visible('.Battle'):
+                while not await page.is_visible(f'//*[@class="noty plus"]/div[3]/div[1]/span[@class="pok1-color" and contains(text(),"{namepok}")] or @class="pok0-color" and contains(text(),"{namepok}")]') and await page.is_visible('.Battle') and (await get_attr_heal(page))[1] > 30:
                     if await page.is_visible(f"//img[@src='{key}']"):
                         await page.click(f"//img[@src='{key}']")
                     else:
@@ -105,7 +104,7 @@ async def check_pokebol(page, namepok, p):
 
 async def catches(page, catch, namepok, gender, gendcat, path, f, p):
     if namepok.lower()[5:] in catch.lower() and gender == gendcat and await page.is_visible("//span[contains(text(),'Можно поймать')]"):
-        while not await page.is_visible(f'//*[@class="noty plus"]/div[3]/div[1]/span[@class="pok0-color" and contains(text(),"{namepok}")]') and await page.is_visible('.Battle'):
+        while not await page.is_visible(f'//*[@class="noty plus"]/div[3]/div[1]/span[@class="pok0-color" and contains(text(),"{namepok}")]') and await page.is_visible('.Battle') and (await get_attr_heal(page))[1] > 30:
             if await page.is_visible(path):
                 await page.click(path)
             else:
@@ -115,7 +114,7 @@ async def catches(page, catch, namepok, gender, gendcat, path, f, p):
         f += 1
         return f, p
     elif namepok.lower()[5:] in catch.lower() and gender == 'zero' and await page.is_visible("//span[contains(text(),'Можно поймать')]"):
-        while not await page.is_visible(f'//*[@class="noty plus"]/div[3]/div[1]/span[@class="pok0-color" and contains(text(),"{namepok}")]') and await page.is_visible('.Battle'):
+        while not await page.is_visible(f'//*[@class="noty plus"]/div[3]/div[1]/span[@class="pok0-color" and contains(text(),"{namepok}")]') and await page.is_visible('.Battle') and (await get_attr_heal(page))[1] > 30:
             if await page.is_visible(path):
                 await page.click(path)
             else:
@@ -273,23 +272,23 @@ async def get_locate(page):
             region = await page.locator("//*[@id='window_games']/div/div[1]/div/div[2]/div").get_attribute('class')
         region = region[:-3]
         if region == 'Name LocationRegionBg1':  # Канто
-            region = 'data/map_kanto.txt'
+            region = 'data/maps/map_kanto.txt'
             return location_me, region
         elif region == 'Name LocationRegionBg2':  # Джото
-            region = 'data/map_joto.txt'
+            region = 'data/maps/map_joto.txt'
             return location_me, region
         elif region == 'Name LocationRegionBg7':  # Калос
-            region = 'data/map_kalos.txt'
+            region = 'data/maps/map_kalos.txt'
             return location_me, region
         elif region == 'Name LocationRegionBg9':  # Алола
-            region = 'data/map_alola.txt'  # алола
+            region = 'data/maps/map_alola.txt'
             return location_me, region
         else:  # Прочие локи с покецентром
-            region = 'core/data/map_other.txt'
+            region = 'core/data/maps/map_other.txt'
             return location_me, region
     else:
         location_me = 'Паллет'
-        region = 'data/map_kalos.txt'
+        region = 'data/maps/map_kanto.txt'
         return location_me, region
 
 

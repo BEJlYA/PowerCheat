@@ -1,8 +1,7 @@
 import asyncio
-from aiogram import F
-from aiogram import Dispatcher
-from core.handlers.get_data import *
-from core.handlers.basic_def import *
+from aiogram import Dispatcher, F
+from core.handlers.datas import *
+from core.handlers.basics import *
 from aiogram.filters import CommandStart
 from core.utils.data_states import DataSteps
 from aiogram.fsm.storage.memory import MemoryStorage

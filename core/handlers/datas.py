@@ -3,13 +3,13 @@ import requests
 from aiogram import Bot
 from aiogram.types import Message
 from core.settings import settings
-from core.keyboards.reply_fb import *
-from core.keyboards.reply_sett import *
+from core.keyboards.reply_feedbacks import *
+from core.keyboards.reply_settings import *
 from core.keyboards.reply_menu import *
-from core.keyboards.reply_acc import accou
+from core.keyboards.reply_accounts import accou
 from aiogram.fsm.context import FSMContext
 from core.utils.data_states import DataSteps
-from core.handlers.basic_def import account, setting
+from core.handlers.basics import account, setting
 
 
 async def login(message: Message, state: FSMContext):

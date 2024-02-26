@@ -1,5 +1,5 @@
 from playwright.async_api import async_playwright
-from core.utils.pp_def import auth, target, get_fight, class_gender, catch_pokebol, check_place, shines, catches, fights, runners, healing
+from browser.functions import auth, target, get_fight, class_gender, catch_pokebol, check_place, shines, catches, fights, runners, healing
 
 
 class DoneCheat(Exception):

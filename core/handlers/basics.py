@@ -2,11 +2,9 @@ import sqlite3
 import logging
 from aiogram.types import Message
 from playwright._impl._errors import TargetClosedError
-
-from core.utils.pp_cheat import main
-from core.utils.pp_cheat import DoneCheat
-from core.keyboards.reply_acc import accou
-from core.keyboards.reply_sett import sett
+from browser.cheat import main, DoneCheat
+from core.keyboards.reply_accounts import accou
+from core.keyboards.reply_settings import sett
 from aiogram.fsm.context import FSMContext
 from core.utils.data_states import DataSteps
 from core.keyboards.reply_menu import menus, stop
