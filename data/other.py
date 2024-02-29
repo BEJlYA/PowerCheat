@@ -11,14 +11,14 @@ id_pokebols = {
 }
 
 priority = {
-    '/img/world/items/small/109.png': 1,
-    '/img/world/items/small/316.png': 2,
-    '/img/world/items/small/6.png': 3,
-    '/img/world/items/small/4.png': 4,
-    '/img/world/items/small/3.png': 5,
-    '/img/world/items/small/5.png': 6,
-    '/img/world/items/small/123.png': 7,
-    '/img/world/items/small/392.png': 8,
+    '/img/world/items/small/109.png': 1,  # Генобол
+    '/img/world/items/small/316.png': 2,  # Дистанцбол
+    '/img/world/items/small/6.png': 3,  # Ультрабол
+    '/img/world/items/small/4.png': 4,  # Гритбол
+    '/img/world/items/small/3.png': 5,  # Покебол
+    '/img/world/items/small/5.png': 6,  # Мастербол
+    '/img/world/items/small/123.png': 7,  # Шайнибол
+    '/img/world/items/small/392.png': 8,  # Взломанный Шайнибол
 }
 
 genderly = {
@@ -43,15 +43,5 @@ runners_list = [
     '#594 Аломомола',
     '#679 Хонэдж',
     '#243 Райкоу',
-    '#492 Шеймин',  # новые сбеги
-    '#613 Кабчу',
-    '#133 Иви',
-    '#227 Скармори',
-    '#712 Бергмит',
-    '#147 Дратини',
-    '#238 Смучам',
-    '#027 Сендшрю',
-    '#236 Тирог',
-    '#640 Виризион',
-    '#821 Рукиди',
+    '#492 Шеймин',
 ]

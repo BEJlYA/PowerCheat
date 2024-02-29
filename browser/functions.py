@@ -16,16 +16,24 @@ async def incr(dialog, browser):
         await browser.close()
 
 
-async def target(items):
-    target_item = {}
-    if not items == 'Отсутствует':
-        item = items.lower().split(', ')
-        for i in item:
-            key, value = i.split(':')
-            target_item.update({' ' + key: int(value)})
-        return target_item
+async def target(items, catch):
+    targets = {}
+    if 'Отсутствует' not in items and 'Отсутствует' in catch:
+        itcat = items
+    elif 'Отсутствует' in items and 'Отсутствует' not in catch:
+        itcat = catch
+    elif 'Отсутствует' in items and 'Отсутствует' in catch:
+        itcat = ""
     else:
-        return target_item
+        itcat = items + ', ' + catch
+    itcat = itcat.lower().split(', ')
+    for o in itcat:
+        if ':' in o:
+            key, value = o.split(':')
+            targets.update({' ' + key: int(value)})
+        else:
+            targets.update({' ' + o: int(100)})
+    return targets
 
 
 async def class_gender(gender):
@@ -48,11 +56,10 @@ async def catch_pokebol(pokebol):
 
 async def check_place(page):
     await page.click('//div[10]/div[2]/div[1]')
-    await page.wait_for_selector('//*[@id="DivModal_Pokemons"]')
-    if await page.is_visible('//*[@id="DivModal_Pokemons"]'):
-        p = len(await page.query_selector_all('//*[@id="DivModal_Pokemons"]/div[2]/child::div[@class="PokemonBox"]'))
-        await page.click('//*[@id="DivModal_Pokemons"]/div[1]/div[2]/i')
-        return p
+    await page.wait_for_selector('//*[@id="DivModal_Pokemons"]/div[2]/div[@class="PokemonBox"]')
+    p = len(await page.query_selector_all('//*[@id="DivModal_Pokemons"]/div[2]/child::div[@class="PokemonBox"]'))
+    await page.click('//*[@id="DivModal_Pokemons"]/div[1]/div[2]/i')
+    return p
 
 
 async def get_fight(page):
@@ -89,12 +96,21 @@ async def check_pokebol(page, namepok, p):
     for key in sorted(priority, key=priority.get):
         if key in src:
             if await page.is_visible('.Battle'):
-                while not await page.is_visible(f'//*[@class="noty plus"]/div[3]/div[1]/span[@class="pok1-color" and contains(text(),"{namepok}")] or @class="pok0-color" and contains(text(),"{namepok}")]') and await page.is_visible('.Battle') and (await get_attr_heal(page))[1] > 30:
+                while not await page.is_visible(f'//*[@class="noty plus"]/div[3]/div[1]/span[@class="pok1-color" and contains(text(),"{namepok}")] or @class="pok0-color" and contains(text(),"{namepok}")]') and await page.is_visible('.Battle') and p < 6:
                     if await page.is_visible(f"//img[@src='{key}']"):
                         await page.click(f"//img[@src='{key}']")
+                        if await check_exaut(page):
+                            break
+                        else:
+                            await page.wait_for_timeout(1000)
                     else:
                         await page.click("//*[@id='battleMap']/div/div[4]/div[3]/div[3]/div[2]/i")
-                        await check_exaut(page)
+                        await page.wait_for_timeout(1000)
+                        if not await page.is_visible(f"//img[@src='{key}']") or (await get_attr_heal(page))[1] < 40:
+                            page.once("dialog", lambda dialog: dialog.accept('ОК'))
+                            await page.click("//*[@id='battleMap']/div/div[4]/div[3]/div[3]/div[4]")
+                            await check_exaut(page)
+                            return p
                 p += 1
                 return p
             else:
@@ -102,24 +118,46 @@ async def check_pokebol(page, namepok, p):
     return p
 
 
-async def catches(page, catch, namepok, gender, gendcat, path, f, p):
-    if namepok.lower()[5:] in catch.lower() and gender == gendcat and await page.is_visible("//span[contains(text(),'Можно поймать')]"):
-        while not await page.is_visible(f'//*[@class="noty plus"]/div[3]/div[1]/span[@class="pok0-color" and contains(text(),"{namepok}")]') and await page.is_visible('.Battle') and (await get_attr_heal(page))[1] > 30:
+async def catches(page, targets, namepok, gender, gendcat, path, f, p):
+    if namepok.lower()[4:] in targets and gender == gendcat and await page.is_visible("//span[contains(text(),'Можно поймать')]") and p < 6:
+        while not await page.is_visible(f'//*[@class="noty plus"]/div[3]/div[1]/span[@class="pok0-color" and contains(text(),"{namepok}")]') or await page.is_visible('.Battle'):
             if await page.is_visible(path):
                 await page.click(path)
+                if await check_exaut(page):
+                    break
+                else:
+                    await page.wait_for_timeout(1000)
             else:
                 await page.click("//*[@id='battleMap']/div/div[4]/div[3]/div[3]/div[2]/i")
-                await check_exaut(page)
+                await page.wait_for_timeout(1000)
+                if not await page.is_visible(path) or (await get_attr_heal(page))[1] < 40:
+                    page.once("dialog", lambda dialog: dialog.accept('ОК'))
+                    await page.click("//*[@id='battleMap']/div/div[4]/div[3]/div[3]/div[4]")
+                    await check_exaut(page)
+                    return f, p
+        targets.update({namepok.lower()[4:]: int(targets.get(namepok.lower()[4:])) - 1})
+        await drop(page, targets)
         p += 1
         f += 1
         return f, p
-    elif namepok.lower()[5:] in catch.lower() and gender == 'zero' and await page.is_visible("//span[contains(text(),'Можно поймать')]"):
-        while not await page.is_visible(f'//*[@class="noty plus"]/div[3]/div[1]/span[@class="pok0-color" and contains(text(),"{namepok}")]') and await page.is_visible('.Battle') and (await get_attr_heal(page))[1] > 30:
+    elif namepok.lower()[4:] in targets and gender == 'zero' and await page.is_visible("//span[contains(text(),'Можно поймать')]") and p < 6:
+        while not await page.is_visible(f'//*[@class="noty plus"]/div[3]/div[1]/span[@class="pok0-color" and contains(text(),"{namepok}")]') or await page.is_visible('.Battle'):
             if await page.is_visible(path):
                 await page.click(path)
+                if await check_exaut(page):
+                    break
+                else:
+                    await page.wait_for_timeout(1000)
             else:
                 await page.click("//*[@id='battleMap']/div/div[4]/div[3]/div[3]/div[2]/i")
-                await check_exaut(page)
+                await page.wait_for_timeout(1000)
+                if not await page.is_visible(path) or (await get_attr_heal(page))[1] < 40:
+                    page.once("dialog", lambda dialog: dialog.accept('ОК'))
+                    await page.click("//*[@id='battleMap']/div/div[4]/div[3]/div[3]/div[4]")
+                    await check_exaut(page)
+                    return f, p
+        targets.update({namepok.lower()[4:]: int(targets.get(namepok.lower()[4:])) - 1})
+        await drop(page, targets)
         p += 1
         f += 1
         return f, p
@@ -127,7 +165,7 @@ async def catches(page, catch, namepok, gender, gendcat, path, f, p):
         return f, p
 
 
-async def fights(page, target_item, f, pp=2, hp_bar=41):
+async def fights(page, targets, f, pp=2, hp_bar=41):
     if await page.is_visible('.Battle'):
         while not await page.is_visible("//*[@class='noty minipok']"):
             if await page.is_visible("//div[@class=' Move']//div[@class='Name MoveCategory1' or @class='Name MoveCategory2']"):
@@ -139,7 +177,7 @@ async def fights(page, target_item, f, pp=2, hp_bar=41):
                 await page.click("//*[@id='battleMap']/div/div[4]/div[3]/div[3]/div[4]")
                 await check_exaut(page)
                 return f, pp, hp_bar
-        await drop(page, target_item)
+        await drop(page, targets)
         f += 1
         return f, pp, hp_bar
     else:
@@ -160,21 +198,26 @@ async def get_attr_heal(page, pp=0):
 async def check_exaut(page):
     if await page.is_visible("//*[@id='battleMap']/div/div[4]/div[3]/div[3]/div[5][@style='display: inline-block;']"):
         await page.click("//*[@id='battleMap']/div/div[4]/div[3]/div[3]/div[5][@style='display: inline-block;']")
+        return True
+    else:
+        return False
 
 
-async def drop(page, target_item):
-    if not len(target_item) == 0:
-        noty_items = await page.query_selector_all('//*[@class="noty plus"]/div[3]/child::div[@class="Step"]')
-        for noty_i in noty_items:
-            noty_i_text = await noty_i.text_content()
+async def drop(page, targets):
+    noty_items = await page.query_selector_all('//*[@class="noty plus"]/div[3]/child::div[@class="Step"]')
+    for noty_i in noty_items:
+        noty_i_text = await noty_i.text_content()
+        try:
             if ' x' in noty_i_text:
                 key, value = noty_i_text.lower().split(' x')
-                target_item.update({key: int(target_item.get(key)) - int(value)})
+                targets.update({key: int(targets.get(key)) - int(value)})
             else:
-                try:
-                    target_item.update({noty_i_text: int(target_item.get(noty_i_text)) - 1})
-                except TypeError:
-                    pass
+                targets.update({noty_i_text.lower(): int(targets.get(noty_i_text.lower())) - 1})
+        except TypeError:
+            pass
+    keys_to_remove = [key for key, value in targets.items() if value <= 0]
+    for key in keys_to_remove:
+        targets.pop(key)
 
 
 async def healing(page, pp, hp_bar, p):
@@ -225,25 +268,40 @@ async def healing(page, pp, hp_bar, p):
                 for n_quit in n_quits:
                     if await n_quit.text_content() == n_step:
                         await n_quit.click(timeout=0)
+                        await page.wait_for_timeout(400)
                 if await page.is_visible("//*[@id='window_games']/div/div[3]/div[3]/div[1]/i[@class='fal fa-plus']") and p >= 6:
                     await drop_pok(page)
-                    await page.click("//*[@id='window_games']/div/div[3]/div[3]/div[1]/i[@class='fal fa-plus']", timeout=0)
+                    await page.locator("//*[@id='window_games']/div/div[3]/div[3]/div[1]/i[@class='fal fa-plus']").click()
                     for b_step in b_heal:
                         b_quits = await page.query_selector_all("//*[@id='window_games']/div/div[2]/div[2]/div")
                         for b_quit in b_quits:
                             if await b_quit.text_content() == b_step:
                                 await b_quit.click(timeout=0)
+                                await page.wait_for_timeout(400)
                     await page.click('//div[@class="Button NoActive" and @onclick="PP.fight.setHunt(this);"]')
+                    p = 1
+                    return p
                 elif await page.is_visible("//*[@id='window_games']/div/div[3]/div[3]/div[1]/i[@class='fal fa-plus']"):
-                    await page.click("//*[@id='window_games']/div/div[3]/div[3]/div[1]/i[@class='fal fa-plus']", timeout=0)
+                    await page.locator("//*[@id='window_games']/div/div[3]/div[3]/div[1]/i[@class='fal fa-plus']").click()
                     for b_step in b_heal:
                         b_quits = await page.query_selector_all("//*[@id='window_games']/div/div[2]/div[2]/div")
                         for b_quit in b_quits:
                             if await b_quit.text_content() == b_step:
                                 await b_quit.click(timeout=0)
+                                await page.wait_for_timeout(400)
                     await page.click('//div[@class="Button NoActive" and @onclick="PP.fight.setHunt(this);"]')
+                    return p
         else:
-            await page.click("//*[@id='window_games']/div/div[3]/div[3]/div[1]/i[@class='fal fa-plus']", timeout=0)
+            if p > 6:
+                await drop_pok(page)
+                await page.locator("//*[@id='window_games']/div/div[3]/div[3]/div[1]/i[@class='fal fa-plus']").click()
+                p = 1
+                return p
+            else:
+                await page.locator("//*[@id='window_games']/div/div[3]/div[3]/div[1]/i[@class='fal fa-plus']").click()
+                return p
+    else:
+        return p
 
 
 async def drop_pok(page):

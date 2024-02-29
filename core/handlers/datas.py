@@ -232,7 +232,7 @@ async def get_heal(message: Message, state: FSMContext):
 
 
 async def drop(message: Message, state: FSMContext):
-    await message.answer('Введите предмет/ы из покемона:', reply_markup=inputs)
+    await message.answer('Введите "Предмет:Количество" <i>(через запятую для выбора нескольких предметов)</i>:', reply_markup=inputs)
     await state.set_state(DataSteps.ITEM)
 
 
@@ -257,7 +257,7 @@ async def get_item(message: Message, state: FSMContext):
 
 
 async def catch(message: Message, state: FSMContext):
-    await message.answer('Введите "Имя покемона" <i>(через пробел для выбора нескольких покемонов)</i>:', reply_markup=inputs)
+    await message.answer('Введите "Имя покемона:Количество" <i>(через запятую для выбора нескольких покемонов)</i>:', reply_markup=inputs)
     await state.set_state(DataSteps.POK)
 
 
