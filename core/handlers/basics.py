@@ -1,4 +1,4 @@
-import sqlite3
+import aiosqlite
 import logging
 from aiogram.types import Message
 from playwright._impl._errors import TargetClosedError
@@ -11,24 +11,25 @@ from core.keyboards.reply_menu import menus, stop
 
 
 async def sqlbase(message: Message):
-    connection = sqlite3.connect('data/users.db')
-    cursor = connection.cursor()
-    cursor.execute("""CREATE TABLE IF NOT EXISTS profiles(chat_id  integer not null constraint data_pk primary key,
+    async with aiosqlite.connect('data/users.db') as db:
+        await db.execute("""CREATE TABLE IF NOT EXISTS profiles(chat_id  integer not null constraint data_pk primary key,
                                             login    TEXT    default 'Отсутствует', password TEXT    default 'Отсутствует',
                                             proxy    TEXT    default 'Отсутствуют', fight    integer default 'Отсутствует',
                                             heal     TEXT    default 'Отключено', items    TEXT    default 'Отсутствует',
                                             catch    TEXT    default 'Отсутствует', shine    TEXT    default 'Отключено',
                                             gender   TEXT    default 'Отсутствует', pokebol  TEXT    default 'Отсутствует')""")
-    cursor.execute("""CREATE TABLE IF NOT EXISTS feedback(message INTEGER, user INTEGER);""")
-    connection.commit()
-    cursor.execute("""SELECT chat_id FROM profiles WHERE chat_id = ?""", (message.chat.id,))
-    if cursor.fetchone() is None:
-        cursor.execute("""INSERT INTO profiles (chat_id) VALUES (?)""", (message.chat.id,))
-    connection.commit()
+        await db.execute("""CREATE TABLE IF NOT EXISTS feedback(message INTEGER, user INTEGER);""")
+        await db.commit()
+        cursor = await db.execute("""SELECT chat_id FROM profiles WHERE chat_id = ?""", (message.chat.id,))
+        if await cursor.fetchone() is None:
+            await db.execute("""INSERT INTO profiles (chat_id) VALUES (?)""", (message.chat.id,))
+        await db.commit()
 
 
 async def start_msg(message: Message):
-    await message.answer('Привет, я помогу с облегчением рутинных действий в браузерной игре про Покемонов "PokePower". <b><a href="https://t.me/+7J3a6UokLodhMWYy">Канал</a></b> с различной информацией!', reply_markup=menus)
+    await message.answer(
+        'Привет, я помогу с облегчением рутинных действий в браузерной игре про Покемонов "PokePower". <b><a href="https://t.me/+7J3a6UokLodhMWYy">Канал</a></b> с различной информацией!',
+        reply_markup=menus)
     await sqlbase(message)
 
 
@@ -37,30 +38,29 @@ async def help(message: Message):
 
 
 async def clear_ac(message: Message):
-    connection = sqlite3.connect('data/users.db')
-    cursor = connection.cursor()
-    cursor.execute("""UPDATE profiles SET login = 'Отсутствует', password = 'Отсутствует', proxy = 'Отсутствуют' WHERE chat_id = ?""",
-                   (message.chat.id,))
-    connection.commit()
+    async with aiosqlite.connect('data/users.db') as db:
+        await db.execute(
+            """UPDATE profiles SET login = 'Отсутствует', password = 'Отсутствует', proxy = 'Отсутствуют' WHERE chat_id = ?""",
+            (message.chat.id,))
+        await db.commit()
     await message.answer('Все параметры очищенны!', reply_markup=accou)
 
 
 async def clear_st(message: Message):
-    connection = sqlite3.connect('data/users.db')
-    cursor = connection.cursor()
-    cursor.execute(
-        """UPDATE profiles SET fight = 'Отсутствует', heal = 'Отключено', items = 'Отсутствует', catch = 'Отсутствует', gender = 'Отсутствует', pokebol = 'Отсутствует', shine = 'Отключено' WHERE chat_id = ?""",
-        (message.chat.id,))
-    connection.commit()
+    async with aiosqlite.connect('data/users.db') as db:
+        await db.execute(
+            """UPDATE profiles SET fight = 'Отсутствует', heal = 'Отключено', items = 'Отсутствует', catch = 'Отсутствует', gender = 'Отсутствует', pokebol = 'Отсутствует', shine = 'Отключено' WHERE chat_id = ?""",
+            (message.chat.id,))
+        await db.commit()
     await message.answer('Все параметры очищенны!', reply_markup=sett)
 
 
 async def account(message: Message):
-    connection = sqlite3.connect('data/users.db')
-    cursor = connection.cursor()
-    cursor.execute("""SELECT login, password, proxy FROM profiles WHERE chat_id = ?""",
-                   (message.chat.id,))
-    login, password, proxy = cursor.fetchone()
+    async with aiosqlite.connect('data/users.db') as db:
+        cursor = await db.execute("""SELECT login, password, proxy FROM profiles WHERE chat_id = ?""",
+                                  (message.chat.id,))
+        login, password, proxy = await cursor.fetchone()
+        await db.commit()
     if not password == 'Отсутствует':
         hid_pass = password[3:][:-3].replace(password[3:][:-3],
                                              password[:3] + '*' * len(password[3:][:-3]) + password[3:][-3:])
@@ -74,11 +74,12 @@ async def account(message: Message):
 
 
 async def setting(message: Message):
-    connection = sqlite3.connect('data/users.db')
-    cursor = connection.cursor()
-    cursor.execute("""SELECT fight, heal, items, catch, gender, pokebol, shine FROM profiles WHERE chat_id = ?""",
-                   (message.chat.id,))
-    fight, heal, items, catch, gender, pokebol, shine = cursor.fetchone()
+    async with aiosqlite.connect('data/users.db') as db:
+        cursor = await db.execute(
+            """SELECT fight, heal, items, catch, gender, pokebol, shine FROM profiles WHERE chat_id = ?""",
+            (message.chat.id,))
+        fight, heal, items, catch, gender, pokebol, shine = await cursor.fetchone()
+        await db.commit()
     await message.answer(f'<u>⚙Настройки:</u>\n\n'
                          f'⚔Бой: <i><b>{fight}</b></i>\n'
                          f'⛑Лечение: <i><b>{heal}</b></i>\n'
@@ -91,28 +92,35 @@ async def setting(message: Message):
 
 
 async def start_cheat(message: Message, state: FSMContext):
-    connection = sqlite3.connect('data/users.db')
-    cursor = connection.cursor()
-    cursor.execute("""SELECT login, password, proxy, fight, heal, items, catch, gender, pokebol, shine FROM profiles WHERE chat_id = ?""",
-                   (message.chat.id,))
-    login, password, proxy, fight, heal, items, catch, gender, pokebol, shine = cursor.fetchone()
-    try:
-        await message.answer('Программа запущена с выбранными настройками, ожидайте результатов!', reply_markup=stop)
-        await state.set_state(DataSteps.START)
-        await main(login, password, proxy, fight, items, catch, gender, pokebol, shine, state)
-    except DoneCheat as dc:
-        await message.answer(f'{dc}', reply_markup=menus)
-        await state.set_state(None)
-    except TargetClosedError:
-        await message.answer('Программа остановлена!', reply_markup=menus)
-        await state.set_state(None)
-    except Exception as er:
-        logging.error(str(er))
-        if len(str(er)) > 3500:
-            await message.answer(f'Программа была остановлена по ошибке: \n ``` {er[:3500]} ```', reply_markup=menus, parse_mode='MarkdownV2')
-        else:
-            await message.answer(f'Программа была остановлена по ошибке: \n ``` {er} ```', reply_markup=menus, parse_mode='MarkdownV2')
-        await state.set_state(None)
+    async with aiosqlite.connect('data/users.db') as db:
+        cursor = await db.execute(
+            """SELECT login, password, proxy, fight, heal, items, catch, gender, pokebol, shine FROM profiles WHERE chat_id = ?""",
+            (message.chat.id,))
+        login, password, proxy, fight, heal, items, catch, gender, pokebol, shine = await cursor.fetchone()
+        await db.commit()
+    if proxy == 'Отсутствуют' or proxy is None:
+        await message.answer(
+            'Вернитесь и укажите <b>прокси</b>, без них ваш аккаунт <b>рискует быть заблокированным.</b>')
+    else:
+        try:
+            await message.answer('Программа запущена с выбранными настройками, ожидайте результатов!', reply_markup=stop)
+            await state.set_state(DataSteps.START)
+            await main(login, password, proxy, fight, items, catch, gender, pokebol, shine, state)
+        except DoneCheat as dc:
+            await message.answer(f'{dc}', reply_markup=menus)
+            await state.set_state(None)
+        except TargetClosedError:
+            await message.answer('Программа остановлена!', reply_markup=menus)
+            await state.set_state(None)
+        except Exception as er:
+            logging.error(str(er))
+            if len(str(er)) > 3500:
+                await message.answer(f'Программа была остановлена по ошибке: \n ``` {er[:3500]} ```', reply_markup=menus,
+                                     parse_mode='MarkdownV2')
+            else:
+                await message.answer(f'Программа была остановлена по ошибке: \n ``` {er} ```', reply_markup=menus,
+                                     parse_mode='MarkdownV2')
+            await state.set_state(None)
 
 
 async def menu(message: Message):

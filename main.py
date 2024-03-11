@@ -1,4 +1,3 @@
-import asyncio
 from aiogram import Dispatcher, F
 from core.handlers.datas import *
 from core.handlers.basics import *
