@@ -1,9 +1,11 @@
 from aiogram import Dispatcher, F
 from core.handlers.datas import *
 from core.handlers.basics import *
+from aiogram.enums import ParseMode
 from aiogram.filters import CommandStart
 from core.utils.data_states import DataSteps
 from aiogram.fsm.storage.memory import MemoryStorage
+from aiogram.client.default import DefaultBotProperties
 
 
 async def start():
@@ -15,7 +17,7 @@ async def start():
                             logging.StreamHandler()
                         ])
     storage = MemoryStorage()
-    bot = Bot(token=settings.bots.bot_token, parse_mode='HTML')
+    bot = Bot(token=settings.bots.bot_token, default=DefaultBotProperties(parse_mode=ParseMode.HTML))
     dp = Dispatcher(storage=storage)
     dp.startup.register(start_bot)
     dp.shutdown.register(stop_bot)

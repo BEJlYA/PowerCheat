@@ -1,13 +1,14 @@
-import aiosqlite
 import logging
+import aiosqlite
 from aiogram.types import Message
-from playwright._impl._errors import TargetClosedError
-from browser.cheat import main, DoneCheat
-from core.keyboards.reply_accounts import accou
-from core.keyboards.reply_settings import sett
+from core.settings import settings
+from browser.cheat import main, ExCheat
 from aiogram.fsm.context import FSMContext
 from core.utils.data_states import DataSteps
+from core.keyboards.reply_settings import sett
+from core.keyboards.reply_accounts import accou
 from core.keyboards.reply_menu import menus, stop
+from playwright._impl._errors import TargetClosedError
 
 
 async def sqlbase(message: Message):
@@ -26,11 +27,14 @@ async def sqlbase(message: Message):
         await db.commit()
 
 
-async def start_msg(message: Message):
-    await message.answer(
-        'Привет, я помогу с облегчением рутинных действий в браузерной игре про Покемонов "PokePower". <b><a href="https://t.me/+7J3a6UokLodhMWYy">Канал</a></b> с различной информацией!',
-        reply_markup=menus)
-    await sqlbase(message)
+async def start_msg(message: Message, state: FSMContext):
+    if await state.get_state() is None:
+        await message.answer(
+            'Привет, я помогу с облегчением рутинных действий в браузерной игре про Покемонов "PokePower". <b><a href="https://t.me/+7J3a6UokLodhMWYy">Канал</a></b> с различной информацией!',
+            reply_markup=menus)
+        await sqlbase(message)
+    else:
+        await message.answer('В данный момент выполнение данной команды невозможно!')
 
 
 async def help(message: Message):
@@ -92,35 +96,38 @@ async def setting(message: Message):
 
 
 async def start_cheat(message: Message, state: FSMContext):
-    async with aiosqlite.connect('data/users.db') as db:
-        cursor = await db.execute(
-            """SELECT login, password, proxy, fight, heal, items, catch, gender, pokebol, shine FROM profiles WHERE chat_id = ?""",
-            (message.chat.id,))
-        login, password, proxy, fight, heal, items, catch, gender, pokebol, shine = await cursor.fetchone()
-        await db.commit()
-    if proxy == 'Отсутствуют' or proxy is None:
-        await message.answer(
-            'Вернитесь и укажите <b>прокси</b>, без них ваш аккаунт <b>рискует быть заблокированным.</b>')
+    if message.chat.id == settings.bots.admin_id or True:  # "False" to Technical work
+        async with aiosqlite.connect('data/users.db') as db:
+            cursor = await db.execute(
+                """SELECT login, password, proxy, fight, heal, items, catch, gender, pokebol, shine FROM profiles WHERE chat_id = ?""",
+                (message.chat.id,))
+            login, password, proxy, fight, heal, items, catch, gender, pokebol, shine = await cursor.fetchone()
+            await db.commit()
+        if proxy == 'Отсутствуют' or proxy is None:
+            await message.answer(
+                'Вернитесь и укажите <b>прокси</b>, без них ваш аккаунт <b>рискует быть заблокированным.</b>')
+        else:
+            try:
+                await message.answer('Бот запущен с выбранными настройками, ожидайте результатов!', reply_markup=stop)
+                await state.set_state(DataSteps.START)
+                await main(login, password, proxy, fight, items, catch, gender, pokebol, shine, state)
+            except ExCheat as dc:
+                await message.answer(f'{dc}', reply_markup=menus)
+                await state.set_state(None)
+            except TargetClosedError:
+                await message.answer('Бот остановлен!', reply_markup=menus)
+                await state.set_state(None)
+            except Exception as er:
+                logging.error(str(er))
+                if len(str(er)) > 3500:
+                    await message.answer(f'Бот был остановлена из за ошибки: \n ``` {er[:3500]} ```', reply_markup=menus,
+                                         parse_mode='MarkdownV2')
+                else:
+                    await message.answer(f'Бот был остановлена из за ошибки: \n ``` {er} ```', reply_markup=menus,
+                                         parse_mode='MarkdownV2')
+                await state.set_state(None)
     else:
-        try:
-            await message.answer('Программа запущена с выбранными настройками, ожидайте результатов!', reply_markup=stop)
-            await state.set_state(DataSteps.START)
-            await main(login, password, proxy, fight, items, catch, gender, pokebol, shine, state)
-        except DoneCheat as dc:
-            await message.answer(f'{dc}', reply_markup=menus)
-            await state.set_state(None)
-        except TargetClosedError:
-            await message.answer('Программа остановлена!', reply_markup=menus)
-            await state.set_state(None)
-        except Exception as er:
-            logging.error(str(er))
-            if len(str(er)) > 3500:
-                await message.answer(f'Программа была остановлена по ошибке: \n ``` {er[:3500]} ```', reply_markup=menus,
-                                     parse_mode='MarkdownV2')
-            else:
-                await message.answer(f'Программа была остановлена по ошибке: \n ``` {er} ```', reply_markup=menus,
-                                     parse_mode='MarkdownV2')
-            await state.set_state(None)
+        await message.answer('В данный момент проводятся Технические Работы, ожидайте пожалуйста новостей!')
 
 
 async def menu(message: Message):

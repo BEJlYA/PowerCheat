@@ -93,6 +93,8 @@ async def get_proxy(message: Message, state: FSMContext):
             await message.answer('Укажите другие прокси, введенные не работают...', reply_markup=inputs)
         except asyncio.exceptions.TimeoutError:
             await message.answer('Укажите другие прокси, введенные не работают...', reply_markup=inputs)
+        except aiohttp.ClientHttpProxyError:
+            await message.answer('Проверьте правильность введенных прокси или укажите другие...')
 
 
 async def feedback(message: Message, state: FSMContext):
