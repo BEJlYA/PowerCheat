@@ -1,58 +1,63 @@
-from aiogram import Dispatcher, F
-from core.handlers.datas import *
-from core.handlers.basics import *
+import asyncio
+import logging
+from core.handlers import datas
+from core.handlers import basics
+from core.settings import settings
 from aiogram.enums import ParseMode
+from aiogram import Dispatcher, F, Bot
 from aiogram.filters import CommandStart
 from core.utils.data_states import DataSteps
 from aiogram.fsm.storage.memory import MemoryStorage
 from aiogram.client.default import DefaultBotProperties
 
+logging.basicConfig(level=logging.INFO,
+                    format='[%(levelname)s] [%(asctime)s] '
+                           '[%(filename)s]-[%(funcName)s]-[Line: %(lineno)d]: %(message)s',
+                    datefmt='%d/%m/%Y %H:%M:%S',
+                    handlers=[
+                        logging.FileHandler('logs/info.log'),
+                        logging.StreamHandler()
+                    ])
+
 
 async def start():
-    logging.basicConfig(level=logging.INFO,
-                        format='[%(levelname)s] [%(asctime)s] [%(name)s] '
-                               '[%(filename)s]-[%(funcName)s]-[%(lineno)d]: %(message)s',
-                        handlers=[
-                            logging.FileHandler('logs/project.log'),
-                            logging.StreamHandler()
-                        ])
     storage = MemoryStorage()
-    bot = Bot(token=settings.bots.bot_token, default=DefaultBotProperties(parse_mode=ParseMode.HTML))
+    bot = Bot(token=settings.bots.token_bot, default=DefaultBotProperties(parse_mode=ParseMode.HTML))
     dp = Dispatcher(storage=storage)
     dp.startup.register(start_bot)
     dp.shutdown.register(stop_bot)
-    dp.message.register(start_msg, CommandStart())
-    dp.message.register(account, F.text == '👤Аккаунт')
-    dp.message.register(login, F.text == '✏Логин')
-    dp.message.register(get_login, DataSteps.LOGIN)
-    dp.message.register(password, F.text == '🔐Пароль')
-    dp.message.register(get_password, DataSteps.PASSWORD)
-    dp.message.register(proxy, F.text == '🤖Прокси')
-    dp.message.register(get_proxy, DataSteps.PROXY)
-    dp.message.register(clear_ac, F.text == '♻Очистить Аккаунт')
-    dp.message.register(menu, F.text == '◀Вернуться')
-    dp.message.register(feedback, F.text == '📘Обратная связь')
-    dp.message.register(get_feedback, DataSteps.FEEDBACK)
-    dp.message.register(answer_menu, DataSteps.ANSW_M)
-    dp.message.register(answer, DataSteps.ANSW)
-    dp.message.register(help, F.text == '🏳️Помощь')
-    dp.message.register(start_cheat, F.text == '🕹Запуск')
-    dp.message.register(stop_browser, DataSteps.START)
-    dp.message.register(setting, F.text == '⚙Настройки')
-    dp.message.register(fight, F.text == '⚔Бой')
-    dp.message.register(get_fight, DataSteps.FIGHT)
-    dp.message.register(heal, F.text == '⛑Лечение')
-    dp.message.register(get_heal, DataSteps.HEAL)
-    dp.message.register(drop, F.text == '🎲Дроп')
-    dp.message.register(get_item, DataSteps.ITEM)
-    dp.message.register(catch, F.text == '📥Ловля')
-    dp.message.register(get_pok, DataSteps.POK)
-    dp.message.register(get_gender, DataSteps.GENDER)
-    dp.message.register(get_bol, DataSteps.BOL)
-    dp.message.register(shines, F.text == '📋Шайни')
-    dp.message.register(get_shines, DataSteps.SHINE)
-    dp.message.register(clear_st, F.text == '♻Oчистить всё')
-    dp.message.register(none_msg)
+    dp.message.register(basics.start_msg, CommandStart())
+    dp.message.register(basics.account, F.text == '👤Аккаунт')
+    dp.message.register(datas.login, F.text == '✏Логин')
+    dp.message.register(datas.get_login, DataSteps.LOGIN)
+    dp.message.register(datas.password, F.text == '🔐Пароль')
+    dp.message.register(datas.get_password, DataSteps.PASSWORD)
+    dp.message.register(datas.proxy, F.text == '🤖Прокси')
+    dp.message.register(datas.get_proxy, DataSteps.PROXY)
+    dp.message.register(basics.clear_ac, F.text == '♻Очистить Аккаунт')
+    dp.message.register(basics.menu, F.text == '◀Вернуться')
+    dp.message.register(datas.feedback, F.text == '📘Обратная связь')
+    dp.message.register(datas.get_feedback, DataSteps.FEEDBACK)
+    dp.message.register(datas.answer_menu, DataSteps.ANSW_M)
+    dp.message.register(datas.answer, DataSteps.ANSW)
+    dp.message.register(basics.help, F.text == '🏳️Помощь')
+    dp.message.register(basics.start_cheat, F.text == '🕹Запуск')
+    dp.message.register(datas.stop_browser, DataSteps.START)
+    dp.message.register(basics.setting, F.text == '⚙Настройки')
+    dp.message.register(datas.fight, F.text == '⚔Бой')
+    dp.message.register(datas.get_fight, DataSteps.FIGHT)
+    dp.message.register(datas.heal, F.text == '⛑Лечение')
+    dp.message.register(datas.get_heal, DataSteps.HEAL)
+    dp.message.register(datas.drop, F.text == '🎲Дроп')
+    dp.message.register(datas.get_item, DataSteps.ITEM)
+    dp.message.register(datas.catch, F.text == '📥Ловля')
+    dp.message.register(datas.get_pok, DataSteps.POK)
+    dp.message.register(datas.get_gender, DataSteps.GENDER)
+    dp.message.register(datas.get_bol, DataSteps.BOL)
+    dp.message.register(datas.shines, F.text == '📋Шайни')
+    dp.message.register(datas.get_shines, DataSteps.SHINE)
+    dp.message.register(basics.clear_st, F.text == '♻Oчистить всё')
+    dp.message.register(basics.none_msg)
     try:
         await dp.start_polling(bot)
     finally:

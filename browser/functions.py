@@ -1,5 +1,5 @@
 import asyncio
-from data.other import *
+from data import other
 
 
 async def auth(browser, page, login, password):
@@ -37,8 +37,8 @@ async def target(items, catch):
 
 
 async def class_gender(gender):
-    if gender.lower() in genderly:
-        gender = genderly[gender.lower()]
+    if gender.lower() in other.genderly:
+        gender = other.genderly[gender.lower()]
         return gender
     else:
         gender = 'zero'
@@ -46,8 +46,8 @@ async def class_gender(gender):
 
 
 async def catch_pokebol(pokebol):
-    if pokebol.lower() in id_pokebols:
-        path = f"{id_pokebols[pokebol.lower()]}"
+    if pokebol.lower() in other.id_pokebols:
+        path = f"{other.id_pokebols[pokebol.lower()]}"
         return path
     else:
         path = "//img[@src='/img/world/items/small/3.png']"
@@ -74,7 +74,7 @@ async def runner_shine(page, namepok, f, p):
     src = []
     for img in items:
         src.append(await img.get_attribute('src'))
-    for key in sorted(priority, key=priority.get):
+    for key in sorted(other.priority, key=other.priority.get):
         if key in src:
             while not await page.is_visible(f'//div[@class="noty plus"]//span[contains(text(), "{namepok}")]') and await page.is_visible('.Battle') and p < 6:
                 if await page.is_visible(f"//img[@src='{key}']"):
