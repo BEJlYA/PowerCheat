@@ -45,21 +45,123 @@ async def class_gender(gender):
         return gender
 
 
-async def catch_pokebol(pokebol):
-    if pokebol.lower() in other.id_pokebols:
-        path = f"{other.id_pokebols[pokebol.lower()]}"
-        return path
+async def catch_pokebol(pokeball):
+    if pokeball.lower() in other.id_pokeballs:
+        ball_path = f"{other.id_pokeballs[pokeball.lower()]}"
+        return ball_path
     else:
-        path = "//img[@src='/img/world/items/small/3.png']"
-        return path
+        ball_path = "//img[@src='/img/world/items/small/3.png']"
+        return ball_path
 
 
 async def check_place(page):
     await page.click('//div[10]/div[2]/div[1]')
     await page.wait_for_selector('//*[@id="DivModal_Pokemons"]/div[2]/div[@class="PokemonBox"]')
-    p = len(await page.query_selector_all('//*[@id="DivModal_Pokemons"]/div[2]/child::div[@class="PokemonBox"]'))
+    p = len(await page.locator('//*[@id="DivModal_Pokemons"]/div[2]/child::div[@class="PokemonBox"]').all())
     await page.click('//*[@id="DivModal_Pokemons"]/div[1]/div[2]/i')
     return p
+
+
+async def create_rooms(page):
+    class Room:
+        def __init__(self, name):
+            self.name = name
+            self.exits = {}
+            self.drop = None
+            self.pokemons = None
+
+        def add_exit(self, direction, room):
+            self.exits[direction] = room
+
+        def add_drop(self, item):
+            self.drop = item
+
+        def add_pokemon(self, pokemon):
+            self.pokemons = pokemon
+
+    location_me, maps, drop, habitat = await get_locate(page)
+    with open(f'{maps}', 'r', encoding='cp1251') as map:
+        locations = map.readlines()
+    rooms = {}
+    for location in locations:
+        sort = location.strip().split(':')
+        name = sort[0]
+        if name not in rooms:
+            room = Room(name)
+            rooms[name] = room
+        else:
+            room = rooms[name]
+        exits = [exit_room.strip() for exit_room in sort[1:]]
+        for exit_room in exits:
+            if exit_room in rooms:
+                room.add_exit(exit_room, rooms[exit_room])
+            else:
+                new_room = Room(exit_room)
+                rooms[exit_room] = new_room
+                room.add_exit(exit_room, new_room)
+    with open(f'{drop}', 'r', encoding='cp1251') as items_map:
+        items_locations = items_map.readlines()
+    for item_location in items_locations:
+        item = item_location.strip().split(':')[:-1]
+        location_name = item_location.strip().split(':')[-1]
+        if location_name in rooms:
+            rooms[location_name].add_drop(item)
+    with open(f'{habitat}', 'r', encoding='cp1251') as pokemons_map:
+        pokemons_locations = pokemons_map.readlines()
+    for pokemon_location in pokemons_locations:
+        pokemons = pokemon_location.strip().split(':')[:-1]
+        location_name = pokemon_location.strip().split(':')[-1]
+        if location_name in rooms:
+            rooms[location_name].add_pokemon(pokemons)
+    return rooms, location_me
+
+
+async def get_path_targets(targets, rooms, location_me):
+    for target_name, quantity in dict(sorted(targets.items(), key=lambda x: x[1])).items():
+        for location_name, room in rooms.items():
+            if room.drop is not None and target_name[1:] in str(room.drop).lower():
+                shortest_path = await find_shortest_path(rooms[location_me], room)
+                move_path = ([room.name for room in shortest_path])
+                move_path.pop(0)
+                return move_path
+            elif room.pokemons is not None and target_name[1:] in str(room.pokemons).lower():
+                shortest_path = await find_shortest_path(rooms[location_me], room)
+                move_path = ([room.name for room in shortest_path])
+                move_path.pop(0)
+                return move_path
+
+
+async def move(page, move_path):
+    for step in move_path:
+        await page.locator(
+            f'//div[@class="Name" and text()="Доступные переходы"]/following-sibling::div[@class="Steps"]/div[text()="{step}"]').click(
+            timeout=0)
+
+
+async def heal(page, rooms, location_me, p):
+    if not await page.is_visible("//i[@class='fal fa-plus']"):
+        await page.click('//div[@class="Button" and @onclick="PP.fight.setHunt(this,1);"]', timeout=0)
+        shortest_path = await find_shortest_path(rooms[location_me], rooms['Покецентр'])
+        move_path = ([room.name for room in shortest_path])
+        move_path.pop(0)
+        await move(page, move_path)
+        if p >= 6:
+            await page.locator("//i[@class='fal fa-plus']").click(timeout=0)
+            await drop_pok(page)
+        else:
+            await page.locator("//i[@class='fal fa-plus']").click(timeout=0)
+        move_path = ([room.name for room in shortest_path[::-1]])
+        move_path.pop(0)
+        await move(page, move_path)
+        await page.click('//div[@class="Button NoActive" and @onclick="PP.fight.setHunt(this,1);"]', timeout=0)
+    else:
+        if p >= 6:
+            await page.click('//div[@class="Button" and @onclick="PP.fight.setHunt(this,1);"]', timeout=0)
+            await page.locator("//i[@class='fal fa-plus']").click(timeout=0)
+            await drop_pok(page)
+            await page.click('//div[@class="Button NoActive" and @onclick="PP.fight.setHunt(this,1);"]', timeout=0)
+        else:
+            await page.locator("//i[@class='fal fa-plus']").click(timeout=0)
 
 
 async def get_fight(page):
@@ -70,55 +172,63 @@ async def get_fight(page):
 
 async def runner_shine(page, namepok, f, p):
     await page.locator("//*[@id='battleMap']/div/div[4]/div[3]/div[3]/div[2]/i").click()
-    items = await page.query_selector_all("//div[@class='Step tlp-mini-target']/img")
+    await page.wait_for_timeout(300)
+    items = await page.locator("//div[@class='Step tlp-mini-target']/img").all()
     src = []
     for img in items:
         src.append(await img.get_attribute('src'))
     for key in sorted(other.priority, key=other.priority.get):
         if key in src:
-            while not await page.is_visible(f'//div[@class="noty plus"]//span[contains(text(), "{namepok}")]') and await page.is_visible('.Battle') and p < 6:
+            while True:
                 if await page.is_visible(f"//img[@src='{key}']"):
                     await page.locator(f"//img[@src='{key}']").click()
+                elif not await page.is_visible(f'//div[@class="noty plus"]//span[contains(text(), "{namepok}")]') or\
+                        not await page.is_visible('.Battle'):
+                    p += 1
+                    f += 1
+                    return f, p
+                elif not await page.is_visible(f"//img[@src='{key}']") and await page.is_visible(
+                        "//div[@class='UseItemBattle']") or (await get_attr_heal(page))[1] < 40:
+                    break
                 else:
-                    await page.locator("//*[@id='battleMap']/div/div[4]/div[3]/div[3]/div[2]/i").click()
+                    await page.click("//*[@id='battleMap']/div/div[4]/div[3]/div[3]/div[2]/i")
                     await page.wait_for_timeout(200)
-                    if not await page.is_visible(f"//img[@src='{key}']") or (await get_attr_heal(page))[1] < 40:
-                        await check_exaut(page)
-                        return p
-            p += 1
-            f += 1
-            return f, p
 
 
 async def catch_gender(page, targets, namepok, path, f, p):
-    while not await page.is_visible(f'//div[@class="noty plus"]//span[contains(text(), "{namepok}")]') or await page.is_visible('.Battle'):
+    while True:
         if await page.is_visible(path):
             await page.click(path)
-        else:
-            await page.click("//*[@id='battleMap']/div/div[4]/div[3]/div[3]/div[2]/i")
-            await page.wait_for_timeout(200)
-            if not await page.is_visible(path) or (await get_attr_heal(page))[1] < 40:
-                await check_exaut(page)
-                return f, p
-    targets.update({namepok.lower()[4:]: int(targets.get(namepok.lower()[4:])) - 1})
-    await drop(page, targets)
-    p += 1
-    f += 1
-    return f, p
-
-
-async def catch_all(page, targets, namepok, path, f, p):
-    while await page.is_visible('.Battle'):
-        if await page.is_visible(path):
-            await page.click(path)
-        elif not await page.is_visible(path) and await page.is_visible("//div[@class='UseItemBattle']") or (await get_attr_heal(page))[1] < 40:
-            await check_exaut(page)
-            return f, p
-        elif await page.is_visible(f'//div[@class="noty plus"]//span[contains(text(), "{namepok}")]'):
+        elif await page.is_visible(f'//div[@class="noty plus"]//span[contains(text(), "{namepok}")]') or\
+                not await page.is_visible('.Battle'):
             targets.update({namepok.lower()[4:]: int(targets.get(namepok.lower()[4:])) - 1})
             await drop(page, targets)
             p += 1
             f += 1
+            return f, p
+        elif not await page.is_visible(path) and await page.is_visible("//div[@class='UseItemBattle']") or\
+                (await get_attr_heal(page))[1] < 40:
+            await check_exaut(page)
+            return f, p
+        else:
+            await page.click("//*[@id='battleMap']/div/div[4]/div[3]/div[3]/div[2]/i")
+            await page.wait_for_timeout(200)
+
+
+async def catch_all(page, targets, namepok, path, f, p):
+    while True:
+        if await page.is_visible(path):
+            await page.click(path)
+        elif await page.is_visible(f'//div[@class="noty plus"]//span[contains(text(), "{namepok}")]') or\
+                not await page.is_visible('.Battle'):
+            targets.update({namepok.lower()[4:]: int(targets.get(namepok.lower()[4:])) - 1})
+            await drop(page, targets)
+            p += 1
+            f += 1
+            return f, p
+        elif not await page.is_visible(path) and await page.is_visible("//div[@class='UseItemBattle']") or \
+                (await get_attr_heal(page))[1] < 40:
+            await check_exaut(page)
             return f, p
         else:
             await page.click("//*[@id='battleMap']/div/div[4]/div[3]/div[3]/div[2]/i")
@@ -126,7 +236,7 @@ async def catch_all(page, targets, namepok, path, f, p):
 
 
 async def fights(page, namepok, icon_type, type_chart, targets, f, pp=2, hp_bar=41):
-    while not await page.is_visible("//*[@class='noty minipok']") or await page.is_visible('.Battle'):
+    while True:
         if await page.is_visible('//*[@id="battleMap"]/div/div[2]/div[2]//img[@src="/img/load_pika.gif"]'):
             await page.wait_for_timeout(400)
         else:
@@ -139,19 +249,20 @@ async def fights(page, namepok, icon_type, type_chart, targets, f, pp=2, hp_bar=
             max_type = await find_effectiveness(type_chart, types_pok, types)
             if await post_attack(page, max_type, icon_type):
                 await page.wait_for_timeout(400)
-                if await page.is_visible("//*[@id='battleMap']/div/div[3]/div[3]/div/div/div[2]/span[text()='Нет эффекта от атаки.']") and await page.is_visible('.Battle'):
+                if await page.is_visible(
+                        "//*[@id='battleMap']/div/div[3]/div[3]/div/div/div[2]/span[text()='Нет эффекта от атаки.']"
+                ) and await page.is_visible('.Battle'):
                     await check_exaut(page)
                     return f, pp, hp_bar
-                elif not await page.is_visible('.Battle'):
+                elif await page.is_visible("//*[@class='noty minipok']") or not await page.is_visible('.Battle'):
+                    await drop(page, targets)
+                    f += 1
                     return f, pp, hp_bar
-    await drop(page, targets)
-    f += 1
-    return f, pp, hp_bar
 
 
 async def get_attr_heal(page, pp=0):
-    atc_pp = await page.query_selector_all(
-        "//div[@class=' Move']//div[@class='Name MoveCategory1' or @class='Name MoveCategory2']/following::div[1]")
+    atc_pp = await page.locator(
+        "//div[@class=' Move']//div[@class='Name MoveCategory1' or @class='Name MoveCategory2']/following::div[1]").all()
     hp_bar = await page.locator('//*[@id="battleMap"]/div/div[2]/div[1]/div[9]/div[1]/div[2]').get_attribute('style')
     for text_pp in atc_pp:
         intpp = await text_pp.text_content()
@@ -162,9 +273,10 @@ async def get_attr_heal(page, pp=0):
 
 async def find_attack(page, icon_type):
     types = []
-    if await page.is_visible("//div[@class='Name MoveCategory1' or @class='Name MoveCategory2']/parent::*/parent::div[@class=' Move']/img"):
-        damaging = await page.query_selector_all(
-            "//div[@class='Name MoveCategory1' or @class='Name MoveCategory2']/parent::*/parent::div[@class=' Move']/img")
+    if await page.is_visible(
+            "//div[@class='Name MoveCategory1' or @class='Name MoveCategory2']/parent::*/parent::div[@class=' Move']/img"):
+        damaging = await page.locator(
+            "//div[@class='Name MoveCategory1' or @class='Name MoveCategory2']/parent::*/parent::div[@class=' Move']/img").all()
         for attack in damaging:
             src = await attack.get_attribute('src')
             type_attack = icon_type.get(src)
@@ -175,7 +287,7 @@ async def find_attack(page, icon_type):
 
 
 async def find_types(name):
-    with open('data/pokemons/pokemon_types.txt', 'r') as pok_types:
+    with open('data/types/pokemons.txt', 'r') as pok_types:
         file_types = pok_types.readlines()
         for poke_type in file_types:
             types_pok = poke_type.strip().split(':')
@@ -200,7 +312,9 @@ async def find_effectiveness(type_chart, types_pok, types):
 
 async def post_attack(page, max_type, icon_type):
     rollback_attack = list(icon_type.keys())[list(icon_type.values()).index(max_type)]
-    await page.click(f"//img[@src='{rollback_attack}']/following-sibling::*/child::div[@class='Name MoveCategory1' or @class='Name MoveCategory2']", timeout=0)
+    await page.click(
+        f"//img[@src='{rollback_attack}']/following-sibling::*/child::div[@class='Name MoveCategory1' or @class='Name MoveCategory2']",
+        timeout=0)
     return True
 
 
@@ -209,13 +323,16 @@ async def check_exaut(page):
         page.once("dialog", lambda dialog: dialog.accept('ОК'))
         await page.wait_for_timeout(200)
         await page.click("//i[@class='fal fa-flag']")
-        await page.click("//*[@id='battleMap']/div/div[4]/div[3]/div[3]/div[5][@style='display: inline-block;' and @class='buttonFight Button']")
-    elif await page.is_visible("//*[@id='battleMap']/div/div[4]/div[3]/div[3]/div[5][@style='display: inline-block;' and @class='buttonFight Button']"):
-        await page.click("//*[@id='battleMap']/div/div[4]/div[3]/div[3]/div[5][@style='display: inline-block;' and @class='buttonFight Button']")
+        await page.click(
+            "//*[@id='battleMap']/div/div[4]/div[3]/div[3]/div[5][@style='display: inline-block;' and @class='buttonFight Button']")
+    elif await page.is_visible(
+            "//*[@id='battleMap']/div/div[4]/div[3]/div[3]/div[5][@style='display: inline-block;' and @class='buttonFight Button']"):
+        await page.click(
+            "//*[@id='battleMap']/div/div[4]/div[3]/div[3]/div[5][@style='display: inline-block;' and @class='buttonFight Button']")
 
 
 async def drop(page, targets):
-    noty_items = await page.query_selector_all('//*[@class="noty plus"]/div[3]/child::div[@class="Step"]')
+    noty_items = await page.locator('//*[@class="noty plus"]/div[3]/child::div[@class="Step"]').all()
     for noty_i in noty_items:
         noty_i_text = await noty_i.text_content()
         try:
@@ -229,96 +346,16 @@ async def drop(page, targets):
     keys_to_remove = [key for key, value in targets.items() if value <= 0]
     for key in keys_to_remove:
         targets.pop(key)
-
-
-async def healing(page, pp, hp_bar, p):
-    if pp <= 1 or hp_bar <= 40 or p >= 6:
-        if not await page.is_visible("//*[@id='window_games']/div/div[3]/div[3]/div[1]/i[@class='fal fa-plus']"):
-            await page.click('//div[@class="Button" and @onclick="PP.fight.setHunt(this,1);"]')
-            location_me, region = await get_locate(page)
-
-            class Room:
-                def __init__(self, name):
-                    self.name = name
-                    self.exits = {}
-
-                def add_exit(self, direction, room):
-                    self.exits[direction] = room
-
-            with open(f'{region}', 'r', encoding='cp1251') as map:
-                locations = map.readlines()
-            rooms = {}
-            for location in locations:
-                sort = location.strip().split(':')
-                name = sort[0]
-                if name not in rooms:
-                    room = Room(name)
-                    rooms[name] = room
-                else:
-                    room = rooms[name]
-                exits = [exit_room.strip() for exit_room in sort[1:]]
-                for exit_room in exits:
-                    if exit_room in rooms:
-                        room.add_exit(exit_room, rooms[exit_room])
-                    else:
-                        new_room = Room(exit_room)
-                        rooms[exit_room] = new_room
-                        room.add_exit(exit_room, new_room)
-
-            start_room = rooms[f'{location_me}']
-            end_room = rooms['Покецентр']
-
-            shortest_path = await find_shortest_path(start_room, end_room)
-
-            n_heal = [room.name for room in shortest_path]
-            n_heal.pop(0)
-            b_heal = [room.name for room in shortest_path[::-1]]
-            b_heal.pop(0)
-            for n_step in n_heal:
-                n_quits = await page.query_selector_all("//*[@id='window_games']/div/div[2]/div[2]/div")
-                for n_quit in n_quits:
-                    if await n_quit.text_content() == n_step:
-                        await n_quit.click(timeout=0)
-                        await page.wait_for_timeout(400)
-                if await page.is_visible("//*[@id='window_games']/div/div[3]/div[3]/div[1]/i[@class='fal fa-plus']") and p >= 6:
-                    await drop_pok(page)
-                    await page.locator("//*[@id='window_games']/div/div[3]/div[3]/div[1]/i[@class='fal fa-plus']").click()
-                    for b_step in b_heal:
-                        b_quits = await page.query_selector_all("//*[@id='window_games']/div/div[2]/div[2]/div")
-                        for b_quit in b_quits:
-                            if await b_quit.text_content() == b_step:
-                                await b_quit.click(timeout=0)
-                                await page.wait_for_timeout(400)
-                    await page.click('//div[@class="Button NoActive" and @onclick="PP.fight.setHunt(this,1);"]')
-                    p = 1
-                    return p
-                elif await page.is_visible("//*[@id='window_games']/div/div[3]/div[3]/div[1]/i[@class='fal fa-plus']"):
-                    await page.locator("//*[@id='window_games']/div/div[3]/div[3]/div[1]/i[@class='fal fa-plus']").click()
-                    for b_step in b_heal:
-                        b_quits = await page.query_selector_all("//*[@id='window_games']/div/div[2]/div[2]/div")
-                        for b_quit in b_quits:
-                            if await b_quit.text_content() == b_step:
-                                await b_quit.click(timeout=0)
-                                await page.wait_for_timeout(400)
-                    await page.click('//div[@class="Button NoActive" and @onclick="PP.fight.setHunt(this,1);"]')
-                    return p
-        else:
-            if p > 6:
-                await drop_pok(page)
-                await page.locator("//*[@id='window_games']/div/div[3]/div[3]/div[1]/i[@class='fal fa-plus']").click()
-                p = 1
-                return p
-            else:
-                await page.locator("//*[@id='window_games']/div/div[3]/div[3]/div[1]/i[@class='fal fa-plus']").click()
-                return p
-    else:
-        return p
+    if ' ' not in targets and targets:
+        rooms, location_me = await create_rooms(page)
+        move_path = await get_path_targets(targets, rooms, location_me)
+        await move(page, move_path)
 
 
 async def drop_pok(page):
     await page.click('//div[10]/div[2]/div[1]')
     if await page.is_visible('//*[@id="DivModal_Pokemons"]'):
-        pl = await page.query_selector_all('//*[@id="DivModal_Pokemons"]/div[2]/child::div[@class="PokemonBox"]')
+        pl = await page.locator('//*[@id="DivModal_Pokemons"]/div[2]/child::div[@class="PokemonBox"]').all()
         for pb in pl:
             if await pb.query_selector('//i[@class="fa fa-check Green-Color"]'):
                 ball = await pb.query_selector('.Ball')
@@ -332,33 +369,33 @@ async def drop_pok(page):
 
 
 async def get_locate(page):
-    if not await page.is_visible('.Battle'):
-        if await page.is_visible("//*[@id='window_games']/div/div[1]/div/div[3]/div"):
-            location_me = await page.locator("//*[@id='window_games']/div/div[1]/div/div[3]/div").text_content()
-            region = await page.locator("//*[@id='window_games']/div/div[1]/div/div[3]/div").get_attribute('class')
-        else:
-            location_me = await page.locator("//*[@id='window_games']/div/div[1]/div/div[2]/div").text_content()
-            region = await page.locator("//*[@id='window_games']/div/div[1]/div/div[2]/div").get_attribute('class')
-        region = region[:-3]
-        if region == 'Name LocationRegionBg1':  # Канто
-            region = 'data/maps/map_kanto.txt'
-            return location_me, region
-        elif region == 'Name LocationRegionBg2':  # Джото
-            region = 'data/maps/map_joto.txt'
-            return location_me, region
-        elif region == 'Name LocationRegionBg7':  # Калос
-            region = 'data/maps/map_kalos.txt'
-            return location_me, region
-        elif region == 'Name LocationRegionBg9':  # Алола
-            region = 'data/maps/map_alola.txt'
-            return location_me, region
-        else:  # Прочие локи с покецентром
-            region = 'core/data/maps/map_other.txt'
-            return location_me, region
-    else:
-        location_me = 'Паллет'
-        region = 'data/maps/map_kanto.txt'
-        return location_me, region
+    location_me = await page.locator("//div[@class='NameLoc']/div").text_content()
+    region = (await page.locator("//div[@class='NameLoc']/div").get_attribute('class'))[:-3]
+    if region == 'Name LocationRegionBg1':  # Kanto
+        maps = 'data/maps/kanto.txt'
+        drop = 'data/drop/kanto.txt'
+        habitat = 'data/habitat/kanto.txt'
+        return location_me, maps, drop, habitat
+    elif region == 'Name LocationRegionBg2':  # Joto
+        maps = 'data/maps/joto.txt'
+        drop = 'data/drop/joto.txt'
+        habitat = 'data/habitat/joto.txt'
+        return location_me, maps, drop, habitat
+    elif region == 'Name LocationRegionBg7':  # Kalos
+        maps = 'data/maps/kalos.txt'
+        drop = 'data/drop/kalos.txt'
+        habitat = 'data/habitat/kalos.txt'
+        return location_me, maps, drop, habitat
+    elif region == 'Name LocationRegionBg9':  # Alola
+        maps = 'data/maps/alola.txt'
+        drop = 'data/drop/alola.txt'
+        habitat = 'data/habitat/alola.txt'
+        return location_me, maps, drop, habitat
+    else:  # Other locations
+        maps = 'core/data/maps/map_other.txt'
+        drop = ''
+        habitat = ''
+        return location_me, maps, drop, habitat
 
 
 async def find_shortest_path(start_room, end_room):

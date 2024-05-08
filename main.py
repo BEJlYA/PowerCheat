@@ -10,15 +10,6 @@ from core.utils.data_states import DataSteps
 from aiogram.fsm.storage.memory import MemoryStorage
 from aiogram.client.default import DefaultBotProperties
 
-logging.basicConfig(level=logging.INFO,
-                    format='[%(levelname)s] [%(asctime)s] '
-                           '[%(filename)s]-[%(funcName)s]-[Line: %(lineno)d]: %(message)s',
-                    datefmt='%d/%m/%Y %H:%M:%S',
-                    handlers=[
-                        logging.FileHandler('logs/info.log'),
-                        logging.StreamHandler()
-                    ])
-
 
 async def start():
     storage = MemoryStorage()
@@ -74,4 +65,12 @@ async def stop_bot(bot: Bot):
 
 
 if __name__ in '__main__':
+    logging.basicConfig(level=logging.INFO,
+                        format='[%(levelname)s] [%(asctime)s] '
+                               '[%(filename)s]-[%(funcName)s]-[Line: %(lineno)d]: %(message)s',
+                        datefmt='%d/%m/%Y %H:%M:%S',
+                        handlers=[
+                            logging.FileHandler('logs/info.log'),
+                            logging.StreamHandler()
+                        ])
     asyncio.run(start())
