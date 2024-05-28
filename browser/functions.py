@@ -180,13 +180,13 @@ async def runner_shine(page, namepok, f, p):
     for key in sorted(other.priority, key=other.priority.get):
         if key in src:
             while True:
-                if await page.is_visible(f"//img[@src='{key}']"):
-                    await page.locator(f"//img[@src='{key}']").click()
-                elif not await page.is_visible(f'//div[@class="noty plus"]//span[contains(text(), "{namepok}")]') or\
+                if not await page.is_visible(f'//div[@class="noty plus"]//span[contains(text(), "{namepok}")]') or\
                         not await page.is_visible('.Battle'):
                     p += 1
                     f += 1
                     return f, p
+                elif await page.is_visible(f"//img[@src='{key}']"):
+                    await page.locator(f"//img[@src='{key}']").click()
                 elif not await page.is_visible(f"//img[@src='{key}']") and await page.is_visible(
                         "//div[@class='UseItemBattle']") or (await get_attr_heal(page))[1] < 40:
                     break
@@ -197,15 +197,15 @@ async def runner_shine(page, namepok, f, p):
 
 async def catch_gender(page, targets, namepok, path, f, p):
     while True:
-        if await page.is_visible(path):
-            await page.click(path)
-        elif await page.is_visible(f'//div[@class="noty plus"]//span[contains(text(), "{namepok}")]') or\
+        if await page.is_visible(f'//div[@class="noty plus"]//span[contains(text(), "{namepok}")]') or\
                 not await page.is_visible('.Battle'):
             targets.update({namepok.lower()[4:]: int(targets.get(namepok.lower()[4:])) - 1})
             await drop(page, targets)
             p += 1
             f += 1
             return f, p
+        elif await page.is_visible(path):
+            await page.click(path)
         elif not await page.is_visible(path) and await page.is_visible("//div[@class='UseItemBattle']") or\
                 (await get_attr_heal(page))[1] < 40:
             await check_exaut(page)
@@ -217,15 +217,15 @@ async def catch_gender(page, targets, namepok, path, f, p):
 
 async def catch_all(page, targets, namepok, path, f, p):
     while True:
-        if await page.is_visible(path):
-            await page.click(path)
-        elif await page.is_visible(f'//div[@class="noty plus"]//span[contains(text(), "{namepok}")]') or\
+        if await page.is_visible(f'//div[@class="noty plus"]//span[contains(text(), "{namepok}")]') or\
                 not await page.is_visible('.Battle'):
             targets.update({namepok.lower()[4:]: int(targets.get(namepok.lower()[4:])) - 1})
             await drop(page, targets)
             p += 1
             f += 1
             return f, p
+        elif await page.is_visible(path):
+            await page.click(path)
         elif not await page.is_visible(path) and await page.is_visible("//div[@class='UseItemBattle']") or \
                 (await get_attr_heal(page))[1] < 40:
             await check_exaut(page)
@@ -297,15 +297,23 @@ async def find_types(name):
 
 async def find_effectiveness(type_chart, types_pok, types):
     max_effectiveness = {}
-    for i in types_pok:
+    if len(types_pok) == 2:
         for a in types:
-            e = type_chart.get(i, {}).get(a, 1)
-            if a in max_effectiveness:
-                if e > max_effectiveness[a][1]:
+            for i in types_pok:
+                e = type_chart.get(a, {}).get(i, 1)
+                if a in max_effectiveness:
+                    max_effectiveness[a] = (i, e * (max_effectiveness[a][1]))
+                else:
                     max_effectiveness[a] = (i, e)
-            else:
-                max_effectiveness[a] = (i, e)
-
+    else:
+        for i in types_pok:
+            for a in types:
+                e = type_chart.get(a, {}).get(i, 1)
+                if a in max_effectiveness:
+                    if e > max_effectiveness[a][1]:
+                        max_effectiveness[a] = (i, e)
+                else:
+                    max_effectiveness[a] = (i, e)
     max_type = max(max_effectiveness.items(), key=lambda x: x[1][1])
     return max_type[0]
 
