@@ -129,6 +129,8 @@ async def get_path_targets(targets, rooms, location_me):
                 move_path = ([room.name for room in shortest_path])
                 move_path.pop(0)
                 return move_path
+            else:
+                return
 
 
 async def move(page, move_path):
@@ -180,7 +182,7 @@ async def runner_shine(page, namepok, f, p):
     for key in sorted(other.priority, key=other.priority.get):
         if key in src:
             while True:
-                if not await page.is_visible(f'//div[@class="noty plus"]//span[contains(text(), "{namepok}")]') or\
+                if await page.is_visible(f'//div[@class="noty plus"]//span[contains(text(), "{namepok}")]') or\
                         not await page.is_visible('.Battle'):
                     p += 1
                     f += 1
@@ -235,10 +237,19 @@ async def catch_all(page, targets, namepok, path, f, p):
             await page.wait_for_timeout(200)
 
 
-async def fights(page, namepok, icon_type, type_chart, targets, f, pp=2, hp_bar=41):
+async def fights(page, namepok, icon_type, type_chart, targets, f, pp=3, hp_bar=41):
     while True:
         if await page.is_visible('//*[@id="battleMap"]/div/div[2]/div[2]//img[@src="/img/load_pika.gif"]'):
             await page.wait_for_timeout(400)
+        elif await page.is_visible(
+                "//*[@id='battleMap']/div/div[3]/div[3]/div/div/div[2]/span[text()='Нет эффекта от атаки.']"
+        ) and await page.is_visible('.Battle'):
+            await check_exaut(page)
+            return f, pp, hp_bar
+        elif await page.is_visible("//*[@class='noty minipok']") or not await page.is_visible('.Battle'):
+            await drop(page, targets)
+            f += 1
+            return f, pp, hp_bar
         else:
             pp, hp_bar = await get_attr_heal(page)
             types = await find_attack(page, icon_type)
@@ -249,21 +260,12 @@ async def fights(page, namepok, icon_type, type_chart, targets, f, pp=2, hp_bar=
             max_type = await find_effectiveness(type_chart, types_pok, types)
             if await post_attack(page, max_type, icon_type):
                 await page.wait_for_timeout(400)
-                if await page.is_visible(
-                        "//*[@id='battleMap']/div/div[3]/div[3]/div/div/div[2]/span[text()='Нет эффекта от атаки.']"
-                ) and await page.is_visible('.Battle'):
-                    await check_exaut(page)
-                    return f, pp, hp_bar
-                elif await page.is_visible("//*[@class='noty minipok']") or not await page.is_visible('.Battle'):
-                    await drop(page, targets)
-                    f += 1
-                    return f, pp, hp_bar
 
 
 async def get_attr_heal(page, pp=0):
     atc_pp = await page.locator(
         "//div[@class=' Move']//div[@class='Name MoveCategory1' or @class='Name MoveCategory2']/following::div[1]").all()
-    hp_bar = await page.locator('//*[@id="battleMap"]/div/div[2]/div[1]/div[9]/div[1]/div[2]').get_attribute('style')
+    hp_bar = await page.locator('//div[@class="PokemonA"]//div[@class="HpBar __hpW"]').get_attribute('style')
     for text_pp in atc_pp:
         intpp = await text_pp.text_content()
         pp += int(intpp[:intpp.rfind('/')])
@@ -287,7 +289,7 @@ async def find_attack(page, icon_type):
 
 
 async def find_types(name):
-    with open('data/types/pokemons.txt', 'r') as pok_types:
+    with open('data/types/pokemons.txt', 'r', encoding="cp1251") as pok_types:
         file_types = pok_types.readlines()
         for poke_type in file_types:
             types_pok = poke_type.strip().split(':')
@@ -357,7 +359,8 @@ async def drop(page, targets):
     if ' ' not in targets and targets:
         rooms, location_me = await create_rooms(page)
         move_path = await get_path_targets(targets, rooms, location_me)
-        await move(page, move_path)
+        if move_path is not None:
+            await move(page, move_path)
 
 
 async def drop_pok(page):
@@ -400,9 +403,9 @@ async def get_locate(page):
         habitat = 'data/habitat/alola.txt'
         return location_me, maps, drop, habitat
     else:  # Other locations
-        maps = 'core/data/maps/map_other.txt'
-        drop = ''
-        habitat = ''
+        maps = 'data/maps/other.txt'
+        drop = 'data/drop/other.txt'
+        habitat = 'data/habitat/other.txt'
         return location_me, maps, drop, habitat
 
 

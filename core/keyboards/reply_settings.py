@@ -6,9 +6,6 @@ sett = ReplyKeyboardMarkup(keyboard=[
             text='⚔Бой'
         ),
         KeyboardButton(
-            text='⛑Лечение'
-        ),
-        KeyboardButton(
             text='🎲Дроп'
         )
     ],

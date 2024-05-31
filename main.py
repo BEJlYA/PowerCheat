@@ -52,7 +52,6 @@ async def start():
     try:
         await dp.start_polling(bot)
     finally:
-        await bot.send_message(settings.bots.admin_id, text='Бот остановлен по ошибке!')
         await bot.session.close()
 
 
