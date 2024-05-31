@@ -189,27 +189,6 @@ async def get_fight(message: Message, state: FSMContext):
             await message.answer('Требуется ввести числовое значение!', reply_markup=reply_menu.inputs)
 
 
-async def heal(message: Message):
-    await message.answer('Функция отключена...', reply_markup=reply_settings.sett)
-    # await message.answer('Включить авто-лечение?', reply_markup=onoff)
-    # await state.set_state(DataSteps.HEAL)
-
-
-async def get_heal(message: Message, state: FSMContext):
-    if message.text == '✅Включить':
-        await message.answer('Авто-лечение включено!', reply_markup=reply_settings.sett)
-        async with aiosqlite.connect('data/users.db') as db:
-            await db.execute("""UPDATE profiles SET heal = ? WHERE chat_id = ?""", ('Включено', message.chat.id,))
-            await db.commit()
-        await state.set_state(None)
-    elif message.text == '❌Отключить':
-        await message.answer('Авто-лечение отключено!', reply_markup=reply_settings.sett)
-        async with aiosqlite.connect('data/users.db') as db:
-            await db.execute("""UPDATE profiles SET heal = ? WHERE chat_id = ?""", ('Отключено', message.chat.id,))
-            await db.commit()
-        await state.set_state(None)
-
-
 async def drop(message: Message, state: FSMContext):
     await message.answer('Введите "Предмет:Количество" <i>(через запятую для выбора нескольких предметов)</i>:',
                          reply_markup=reply_menu.inputs)

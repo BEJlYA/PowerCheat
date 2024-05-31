@@ -9,7 +9,6 @@ class DataSteps(StatesGroup):
     ANSW_M = State()
     ANSW = State()
     FIGHT = State()
-    HEAL = State()
     ITEM = State()
     POK = State()
     GENDER = State()

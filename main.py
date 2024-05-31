@@ -37,8 +37,6 @@ async def start():
     dp.message.register(basics.setting, F.text == '⚙Настройки')
     dp.message.register(datas.fight, F.text == '⚔Бой')
     dp.message.register(datas.get_fight, DataSteps.FIGHT)
-    dp.message.register(datas.heal, F.text == '⛑Лечение')
-    dp.message.register(datas.get_heal, DataSteps.HEAL)
     dp.message.register(datas.drop, F.text == '🎲Дроп')
     dp.message.register(datas.get_item, DataSteps.ITEM)
     dp.message.register(datas.catch, F.text == '📥Ловля')

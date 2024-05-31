@@ -14,7 +14,7 @@ async def sqlbase(message: Message):
         await db.execute("""CREATE TABLE IF NOT EXISTS profiles(chat_id  integer not null constraint data_pk primary key,
                                             login    TEXT    default 'Отсутствует', password TEXT    default 'Отсутствует',
                                             proxy    TEXT    default 'Отсутствуют', fight    integer default 'Отсутствует',
-                                            heal     TEXT    default 'Отключено', items    TEXT    default 'Отсутствует',
+                                            items    TEXT    default 'Отсутствует',
                                             catch    TEXT    default 'Отсутствует', shine    TEXT    default 'Отключено',
                                             gender   TEXT    default 'Отсутствует', pokebol  TEXT    default 'Отсутствует')""")
         await db.execute("""CREATE TABLE IF NOT EXISTS feedback(message INTEGER, user INTEGER);""")
@@ -51,7 +51,7 @@ async def clear_ac(message: Message):
 async def clear_st(message: Message):
     async with aiosqlite.connect('data/users.db') as db:
         await db.execute(
-            """UPDATE profiles SET fight = 'Отсутствует', heal = 'Отключено', items = 'Отсутствует', catch = 'Отсутствует', gender = 'Отсутствует', pokebol = 'Отсутствует', shine = 'Отключено' WHERE chat_id = ?""",
+            """UPDATE profiles SET fight = 'Отсутствует', items = 'Отсутствует', catch = 'Отсутствует', gender = 'Отсутствует', pokebol = 'Отсутствует', shine = 'Отключено' WHERE chat_id = ?""",
             (message.chat.id,))
         await db.commit()
     await message.answer('Все параметры очищенны!', reply_markup=reply_settings.sett)
@@ -78,9 +78,9 @@ async def account(message: Message):
 async def setting(message: Message):
     async with aiosqlite.connect('data/users.db') as db:
         cursor = await db.execute(
-            """SELECT fight, heal, items, catch, gender, pokebol, shine FROM profiles WHERE chat_id = ?""",
+            """SELECT fight, items, catch, gender, pokebol, shine FROM profiles WHERE chat_id = ?""",
             (message.chat.id,))
-        fight, heal, items, catch, gender, pokebol, shine = await cursor.fetchone()
+        fight, items, catch, gender, pokebol, shine = await cursor.fetchone()
         await db.commit()
     await message.answer(f'<u>⚙Настройки:</u>\n\n'
                          f'⚔Бой: <i><b>{fight}</b></i>\n'
@@ -96,9 +96,9 @@ async def start_cheat(message: Message, state: FSMContext):
     if message.chat.id == settings.bots.admin_id or False:  # "False" to Technical work
         async with aiosqlite.connect('data/users.db') as db:
             cursor = await db.execute(
-                """SELECT login, password, proxy, fight, heal, items, catch, gender, pokebol, shine FROM profiles WHERE chat_id = ?""",
+                """SELECT login, password, proxy, fight, items, catch, gender, pokebol, shine FROM profiles WHERE chat_id = ?""",
                 (message.chat.id,))
-            login, password, proxy, fight, heal, items, catch, gender, pokebol, shine = await cursor.fetchone()
+            login, password, proxy, fight, items, catch, gender, pokebol, shine = await cursor.fetchone()
             await db.commit()
             try:
                 await message.answer('Бот запущен с выбранными настройками, ожидайте результатов!', reply_markup=reply_menu.stop)
