@@ -129,8 +129,6 @@ async def get_path_targets(targets, rooms, location_me):
                 move_path = ([room.name for room in shortest_path])
                 move_path.pop(0)
                 return move_path
-            else:
-                return
 
 
 async def move(page, move_path):

@@ -16,8 +16,8 @@ async def main(login, password, proxy, fight, items, catch, gender, pokeball, sh
             fight = 1500
         browser = await pw.chromium.launch(headless=False, channel='chrome',
                                            executable_path='C:\\Program Files (x86)\\Google\\Chrome\\Application\\chrome.exe',
-                                           args=['--window-size'])
-        context = await browser.new_context(viewport={'width': 1366, 'height': 668})
+                                           args=['--window-size'], proxy={'server': 'per-context'})
+        context = await browser.new_context(viewport={'width': 1366, 'height': 668}, proxy={'server': f'{proxy}'})
         page = await context.new_page()
         await state.update_data(p_browser=browser)
         await functions.auth(browser, page, login, password)

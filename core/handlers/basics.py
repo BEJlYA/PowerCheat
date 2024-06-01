@@ -1,5 +1,7 @@
 import logging
 import aiosqlite
+from aiogram import Bot
+from aiogram import types
 from aiogram.types import Message
 from core.settings import settings
 from browser.cheat import main, ExCheat
@@ -93,13 +95,16 @@ async def setting(message: Message):
 
 
 async def start_cheat(message: Message, state: FSMContext):
-    if message.chat.id == settings.bots.admin_id or False:  # "False" to Technical work
+    if message.chat.id == settings.bots.admin_id or True:  # "False" to Technical work
         async with aiosqlite.connect('data/users.db') as db:
             cursor = await db.execute(
                 """SELECT login, password, proxy, fight, items, catch, gender, pokebol, shine FROM profiles WHERE chat_id = ?""",
                 (message.chat.id,))
             login, password, proxy, fight, items, catch, gender, pokebol, shine = await cursor.fetchone()
             await db.commit()
+        if proxy == 'Отсутствует' or proxy is None:
+            await message.answer('Вернитесь и укажите <b>прокси</b>, без них ваш аккаунт <b>рискует быть заблокированным.</b>')
+        else:
             try:
                 await message.answer('Бот запущен с выбранными настройками, ожидайте результатов!', reply_markup=reply_menu.stop)
                 await state.set_state(DataSteps.START)
