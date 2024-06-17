@@ -1,4 +1,5 @@
 import asyncio
+
 from data import other
 
 
@@ -188,8 +189,11 @@ async def runner_shine(page, namepok, f, p):
                 elif await page.is_visible(f"//img[@src='{key}']"):
                     await page.locator(f"//img[@src='{key}']").click()
                 elif not await page.is_visible(f"//img[@src='{key}']") and await page.is_visible(
-                        "//div[@class='UseItemBattle']") or (await get_attr_heal(page))[1] < 40:
+                        "//div[@class='UseItemBattle']"):
                     break
+                elif (await get_attr_heal(page))[1] < 40:
+                    await check_exaut(page)
+                    return f, p
                 else:
                     await page.click("//*[@id='battleMap']/div/div[4]/div[3]/div[3]/div[2]/i")
                     await page.wait_for_timeout(200)
@@ -362,19 +366,16 @@ async def drop(page, targets):
 
 
 async def drop_pok(page):
-    await page.click('//div[10]/div[2]/div[1]')
-    if await page.is_visible('//*[@id="DivModal_Pokemons"]'):
-        pl = await page.locator('//*[@id="DivModal_Pokemons"]/div[2]/child::div[@class="PokemonBox"]').all()
-        for pb in pl:
-            if await pb.query_selector('//i[@class="fa fa-check Green-Color"]'):
-                ball = await pb.query_selector('.Ball')
-                await ball.click()
-                await page.click('//html/body/div[17]/div[2]/div/div[10]/div/div[2]')
-                await page.click('//*[@id="DivModal_Pokemons"]/div[1]/div[2]/i')
-                return
-        await page.click('.Ball')
+    await page.click('//div[10]/div[2]/div[@data-top-menu-btn="pokemons"]')
+    await page.wait_for_selector('//*[@id="DivModal_Pokemons"]/div[2]/child::div[@class="PokemonBox"]')
+    if await page.is_visible('//i[@class="fa fa-check Green-Color"]/parent::*/parent::*/parent::*/div[@class="Ball"]'):
+        await page.click('//i[@class="fa fa-check Green-Color"]/parent::*/parent::*/parent::*/div[@class="Ball"]')
         await page.click('//html/body/div[17]/div[2]/div/div[10]/div/div[2]')
-        await page.click('//*[@id="DivModal_Pokemons"]/div[1]/div[2]/i')
+        await page.click('//div[@id="DivModal_Pokemons"]/div[1]/div[2]/i')
+    else:
+        await page.click('//div[@class="PokemonBox"]/div[@class="Ball"]')
+        await page.click('//html/body/div[17]/div[2]/div/div[10]/div/div[2]')
+        await page.click('//div[@id="DivModal_Pokemons"]/div[1]/div[2]/i')
 
 
 async def get_locate(page):

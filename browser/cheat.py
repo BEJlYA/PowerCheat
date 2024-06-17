@@ -1,6 +1,7 @@
-from data import other
-from browser import functions
 from playwright.async_api import async_playwright
+
+from browser import functions
+from data import other
 
 
 class ExCheat(Exception):
@@ -8,16 +9,14 @@ class ExCheat(Exception):
         self.txt = text
 
 
-async def main(login, password, proxy, fight, items, catch, gender, pokeball, shine, state, f=0):
+async def main(login, password, proxy, user, pass_proxy, fight, items, catch, gender, pokeball, shine, state, f=0):
     async with async_playwright() as pw:
         if fight == 'Отсутствует' or fight < 0:
             fight = 200
         elif fight > 1500:
             fight = 1500
-        browser = await pw.chromium.launch(headless=False, channel='chrome',
-                                           executable_path='C:\\Program Files (x86)\\Google\\Chrome\\Application\\chrome.exe',
-                                           args=['--window-size'], proxy={'server': 'per-context'})
-        context = await browser.new_context(viewport={'width': 1366, 'height': 668}, proxy={'server': f'{proxy}'})
+        browser = await pw.firefox.launch(proxy={'server': 'per-context'})
+        context = await browser.new_context(proxy={'server': f'{proxy}', 'username': f'{user}', 'password': f'{pass_proxy}'})
         page = await context.new_page()
         await state.update_data(p_browser=browser)
         await functions.auth(browser, page, login, password)
@@ -37,11 +36,11 @@ async def main(login, password, proxy, fight, items, catch, gender, pokeball, sh
                 await page.click('//div[@class="Button NoActive" and @onclick="PP.fight.setHunt(this,1);"]')
             elif await page.is_visible('.Battle'):
                 namepok, gendcat = await functions.get_fight(page)
-                if namepok in other.runners_list and await page.is_visible("//span[contains(text(),'Можно поймать')]"):
+                if namepok in other.runners_list and await page.is_visible("//span[contains(text(),'Можно поймать')]") and p < 6:
                     f, p = await functions.runner_shine(page, namepok, f, p)  # Catches runners
                 elif await page.is_visible(
                         "//div[@class='PokemonB']//div[@class='pok1-color namePokemon Name __name']") and await page.is_visible(
-                        "//span[contains(text(),'Можно поймать')]") and shine == "Включено":
+                        "//span[contains(text(),'Можно поймать')]") and shine == "Включено" and p < 6:
                     f, p = await functions.runner_shine(page, namepok, f, p)  # Catches shines
                 elif namepok.lower()[4:] in targets and gender == gendcat and await page.is_visible(
                         "//span[contains(text(),'Можно поймать')]") and p < 6:
@@ -58,7 +57,7 @@ async def main(login, password, proxy, fight, items, catch, gender, pokeball, sh
                         await functions.heal(page, rooms, location_me, p)
                     if f >= fight or all(int(value) <= 0 for value in targets.values()):
                         raise ExCheat('Бот окончил своё выполнение!')
-            elif not page.url == 'https://pokepower.ru/world':
-                raise ExCheat('Произведен вход с другого устройства!')
             elif 'https://pokepower.ru/world?ver=' in page.url:
                 raise ExCheat('Игра была обновлена!')
+            elif not page.url == 'https://pokepower.ru/world':
+                raise ExCheat('Произведен вход с другого устройства!')

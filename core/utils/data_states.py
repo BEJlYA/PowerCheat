@@ -4,7 +4,6 @@ from aiogram.fsm.state import StatesGroup, State
 class DataSteps(StatesGroup):
     LOGIN = State()
     PASSWORD = State()
-    PROXY = State()
     FEEDBACK = State()
     ANSW_M = State()
     ANSW = State()

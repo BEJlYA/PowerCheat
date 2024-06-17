@@ -1,4 +1,4 @@
-/data/input.txt
+/data/tokens.env
 /data/users.db
 /logs/project.log
 venv/

@@ -11,15 +11,10 @@ accou = ReplyKeyboardMarkup(keyboard=[
     ],
     [
         KeyboardButton(
-            text='🤖Прокси'
+            text='♻Очистить Аккаунт'
         ),
         KeyboardButton(
             text='◀Вернуться'
-        )
-    ],
-    [
-        KeyboardButton(
-            text='♻Очистить Аккаунт'
         )
     ]
 ], resize_keyboard=True)
