@@ -14,3 +14,4 @@ class DataSteps(StatesGroup):
     BOL = State()
     SHINE = State()
     START = State()
+    HELP = State()

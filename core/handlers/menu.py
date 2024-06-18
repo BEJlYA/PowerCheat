@@ -9,7 +9,7 @@ from aiogram.utils.markdown import hide_link
 from playwright._impl._errors import TargetClosedError
 
 from browser.cheat import ExCheat, main
-from core.keyboards import reply_accounts, reply_feedbacks, reply_menu, inline_payments
+from core.keyboards import reply_accounts, reply_feedbacks, reply_menu, inline_payments, reply_help
 from core.utils.settings import setting
 from core.utils.data_states import DataSteps
 
@@ -111,8 +111,9 @@ async def answer(message: Message, state: FSMContext):
                 await message.bot.forward_message(setting.bots.admin_id, chat_id, message_fb)
 
 
-async def help(message: Message):
-    await message.answer('Ссылка на гайд по боту, скоро появится!')
+async def help(message: Message, state: FSMContext):
+    await state.set_state(DataSteps.HELP)
+    await message.answer('⬇Выберите нужный раздел:', reply_markup=reply_help.help)
 
 
 async def check_payments(message: Message, state: FSMContext):

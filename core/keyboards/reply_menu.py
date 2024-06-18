@@ -8,7 +8,7 @@ menus = ReplyKeyboardMarkup(keyboard=[
     ],
     [
         KeyboardButton(
-            text='📘Обратная связь'
+            text='📠Обратная связь'
         ),
         KeyboardButton(
             text='⚙Настройки'

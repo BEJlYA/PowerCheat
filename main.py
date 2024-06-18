@@ -7,7 +7,7 @@ from aiogram.enums import ParseMode
 from aiogram.filters import CommandStart
 from aiogram.fsm.storage.memory import MemoryStorage
 
-from core.handlers import basics, commands, menu, account, settings, payments
+from core.handlers import basics, commands, menu, account, settings, payments, helping
 from core.utils.settings import setting
 from core.utils.data_states import DataSteps
 
@@ -21,7 +21,7 @@ async def start():
     dp.message.register(commands.start_msg, CommandStart())
     #  Registration handlers menu
     dp.message.register(menu.account, F.text == '👤Аккаунт')
-    dp.message.register(menu.feedback, F.text == '📘Обратная связь')
+    dp.message.register(menu.feedback, F.text == '📠Обратная связь')
     dp.message.register(menu.get_feedback, DataSteps.FEEDBACK)
     dp.message.register(menu.answer_menu, DataSteps.ANSW_M)
     dp.message.register(menu.answer, DataSteps.ANSW)
@@ -34,6 +34,8 @@ async def start():
     dp.message.register(account.password, F.text == '🔐Пароль')
     dp.message.register(account.get_password, DataSteps.PASSWORD)
     dp.message.register(account.clear_ac, F.text == '♻Очистить Аккаунт')
+    #  Registration handlers helping menu
+    dp.message.register(helping.help_menu, DataSteps.HELP)
     #  Registration handlers menu setting
     dp.message.register(settings.setting, F.text == '⚙Настройки')
     dp.message.register(settings.fight, F.text == '⚔Бой')
