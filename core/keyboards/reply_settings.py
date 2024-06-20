@@ -58,7 +58,7 @@ genders = ReplyKeyboardMarkup(keyboard=[
             text='Любой'
         ),
         KeyboardButton(
-            text='◀Назад'
+            text='◀Вернуться'
         )
     ]
 ], resize_keyboard=True)

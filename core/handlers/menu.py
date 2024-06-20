@@ -1,20 +1,36 @@
 import logging
 from datetime import datetime
 
-import aiohttp
 import aiosqlite
 from aiogram.fsm.context import FSMContext
 from aiogram.types import Message
-from aiogram.utils.markdown import hide_link
 from playwright._impl._errors import TargetClosedError
 
 from browser.cheat import ExCheat, main
-from core.keyboards import reply_accounts, reply_feedbacks, reply_menu, inline_payments, reply_help
-from core.utils.settings import setting
+from core.keyboards import reply_menu, reply_help, reply_accounts, reply_settings, inline_payments
 from core.utils.data_states import DataSteps
+from core.utils.settings import setting
 
 
-async def account(message: Message):
+async def start_menu(message: Message, state: FSMContext):
+    if message.text == '🏳️Помощь':
+        await help(message, state)
+    elif message.text == '👤Аккаунт':
+        await account(message, state)
+    elif message.text == '⚙Настройки':
+        await settings(message, state)
+    elif message.text == '🕹Запуск':
+        await check_payments(message, state)
+    else:
+        await message.answer('Такая команда у меня отсутствует...', reply_markup=reply_menu.menus)
+
+
+async def help(message: Message, state: FSMContext):
+    await state.set_state(DataSteps.HELP)
+    await message.answer('Выберите нужный раздел:', reply_markup=reply_help.help)
+
+
+async def account(message: Message, state: FSMContext):
     async with aiosqlite.connect('data/users.db') as db:
         cursor = await db.execute("""SELECT login, password FROM profiles WHERE chat_id = ?""",
                                   (message.chat.id,))
@@ -29,116 +45,43 @@ async def account(message: Message):
                          f'✏Логин: <i><b>{login}</b></i>\n'
                          f'🔐Пароль: <i><b>{hid_pass}</b></i>\n',
                          reply_markup=reply_accounts.accou)
+    await state.set_state(DataSteps.ACCOUNT)
 
 
-async def feedback(message: Message, state: FSMContext):
+async def settings(message: Message, state: FSMContext):
     async with aiosqlite.connect('data/users.db') as db:
-        cursor = await db.execute("""SELECT Count(*) FROM feedback""")
-        val_fb = await cursor.fetchone()
+        cursor = await db.execute(
+            """SELECT fight, items, catch, gender, pokebol, shine FROM profiles WHERE chat_id = ?""",
+            (message.chat.id,))
+        fight, items, catch, gender, pokebol, shine = await cursor.fetchone()
         await db.commit()
-    if message.chat.id == setting.bots.admin_id:
-        await message.answer(f'Количество обращений к разработчику: <b>{val_fb[0]}</b>\n'
-                             f'Что желаете делать?', reply_markup=reply_feedbacks.answ)
-        await state.set_state(DataSteps.ANSW_M)
-    else:
-        await message.answer('Напишите ваше обращение к разработчику бота:', reply_markup=reply_feedbacks.febck)
-        await state.set_state(DataSteps.FEEDBACK)
-
-
-async def get_feedback(message: Message, state: FSMContext):
-    if message.text == '◀Вернуться':
-        await message.answer('Вы вернулись в Меню.', reply_markup=reply_menu.menus)
-        await state.set_state(None)
-    else:
-        async with aiosqlite.connect('data/users.db') as db:
-            await db.execute("""INSERT INTO feedback  (message, chat_id) VALUES (?, ?)""",
-                             (message.message_id, message.chat.id,))
-            await db.commit()
-        await message.answer('Ваше сообщение отправлено, ожидайте пожалуйста.', reply_markup=reply_menu.menus)
-        await state.set_state(None)
-
-
-async def answer_menu(message: Message, state: FSMContext):
-    if message.text == '📡Ответить':
-        async with aiosqlite.connect('data/users.db') as db:
-            cursor = await db.execute("""SELECT * from feedback""")
-            if await cursor.fetchone() is None:
-                await db.commit()
-                await state.set_state(None)
-                await message.answer('Обращения отсутствуют!', reply_markup=reply_menu.menus)
-            else:
-                cursor = await db.execute("""SELECT message, chat_id from feedback""")
-                message_fb, chat_id = await cursor.fetchone()
-                await db.commit()
-                await message.answer('Обращение от пользователя:', reply_markup=reply_feedbacks.ansfd)
-                await message.bot.forward_message(setting.bots.admin_id, chat_id, message_fb)
-                await state.set_state(DataSteps.ANSW)
-    elif message.text == '◀Вернуться':
-        await message.answer('Вы вернулись в Меню.', reply_markup=reply_menu.menus)
-        await state.set_state(None)
-    else:
-        await message.answer('Такая команда у меня отсутствует...', reply_markup=reply_feedbacks.answ)
-
-
-async def answer(message: Message, state: FSMContext):
-    if message.text == '‼Удалить':
-        async with aiosqlite.connect('data/users.db') as db:
-            await db.execute("""DELETE FROM feedback WHERE rowid = (SELECT rowid FROM feedback LIMIT 1);""")
-            await db.commit()
-        await message.answer('Обращение удалено из очереди!', reply_markup=reply_feedbacks.ansfd)
-    elif message.text == '◀Вернуться':
-        await message.answer('Вы вернулись в Меню.', reply_markup=reply_menu.menus)
-        await state.set_state(None)
-    else:
-        async with aiosqlite.connect('data/users.db') as db:
-            cursor = await db.execute("""SELECT message, chat_id from feedback""")
-            message_fb, chat_id = await cursor.fetchone()
-            await db.commit()
-        await message.bot.send_message(chat_id, message.text, reply_to_message_id=message_fb)
-        await message.answer('Ответ отправлен пользователю!', reply_markup=reply_feedbacks.ansfd)
-        async with aiosqlite.connect('data/users.db') as db:
-            await db.execute("""DELETE FROM feedback WHERE rowid = (SELECT rowid FROM feedback LIMIT 1);""")
-            cursor = await db.execute("""SELECT * FROM feedback""")
-            if await cursor.fetchone() is None:
-                await db.commit()
-                await state.set_state(None)
-                await message.answer('Обращения от пользователей закончились!', reply_markup=reply_menu.menus)
-            else:
-                await message.answer('Следущее обращение:', reply_markup=reply_feedbacks.ansfd)
-                cursor = await db.execute("""SELECT message, chat_id from feedback""")
-                message_fb, chat_id = await cursor.fetchone()
-                await db.commit()
-                await message.bot.forward_message(setting.bots.admin_id, chat_id, message_fb)
-
-
-async def help(message: Message, state: FSMContext):
-    await state.set_state(DataSteps.HELP)
-    await message.answer('⬇Выберите нужный раздел:', reply_markup=reply_help.help)
+    await message.answer(f'<u>⚙Настройки:</u>\n\n'
+                         f'⚔Бой: <i><b>{fight}</b></i>\n'
+                         f'🎲Дроп: <i><b>{items}</b></i>\n'
+                         f'📥Ловля: <i><b>{catch}</b></i>\n'
+                         f'      🔻Гендер: <i><b>{gender}</b></i>\n'
+                         f'      🔻Бол: <i><b>{pokebol}</b></i>\n'
+                         f'📋Шайни: <i><b>{shine}</b></i>',
+                         reply_markup=reply_settings.sett)
+    await state.set_state(DataSteps.SETTING)
 
 
 async def check_payments(message: Message, state: FSMContext):
-    async with aiohttp.ClientSession() as session:
-        async with session.get(f'https://proxy6.net/api/{setting.bots.api_proxy}') as response:
-            response = eval(await response.text())
-    if 99 <= int(float(response['balance'])):
-        async with aiosqlite.connect('data/users.db') as db:
-            cursor = await db.execute("""SELECT chat_id FROM payments WHERE chat_id = ?""", (message.chat.id,))
-            if await cursor.fetchone() is None:
-                await db.execute("""INSERT INTO payments (chat_id) VALUES (?)""", (message.chat.id,))
-            cursor = await db.execute(
-                """SELECT time_end FROM payments WHERE chat_id = ?""",
-                (message.chat.id,))
-            time_end = (await cursor.fetchone())[0]
-            await db.commit()
-        if time_end is None or int(datetime.now().timestamp()) >= int(time_end):
-            await message.answer('❌<b>У вас не оплачена подписка на бота</b>❌\n\n'
-                                 'Выберите пожалуйста на сколько <b>месяцев</b> вы хотите приобрести подписку:',
-                                 reply_markup=inline_payments.choose_term)
-        else:
-            await start_pw_bot(message, state)
+    async with aiosqlite.connect('data/users.db') as db:
+        cursor = await db.execute("""SELECT chat_id FROM payments WHERE chat_id = ?""", (message.chat.id,))
+        if await cursor.fetchone() is None:
+            await db.execute("""INSERT INTO payments (chat_id) VALUES (?)""", (message.chat.id,))
+        cursor = await db.execute(
+            """SELECT time_end FROM payments WHERE chat_id = ?""",
+            (message.chat.id,))
+        time_end = (await cursor.fetchone())[0]
+        await db.commit()
+    if time_end is None or int(datetime.now().timestamp()) >= int(time_end):
+        await message.answer('❌<b>У вас не оплачена подписка на бота</b>❌\n\n'
+                             'Выберите пожалуйста на сколько <b>месяцев</b> вы хотите приобрести подписку:',
+                             reply_markup=inline_payments.choose_term)
     else:
-        await message.answer('😭Извините, в данный момент это <b>невозможно</b>!\n\nПопробуйте немного позже')
-        await message.bot.send_message(setting.bots.admin_id, f'💎На балансе {hide_link("https://proxy6.net/user/balance")}закончились деньги!💎\n\nПожалуйста пополните баланс!')
+        await start_pw_bot(message, state)
 
 
 async def start_pw_bot(message: Message, state: FSMContext):
@@ -156,25 +99,29 @@ async def start_pw_bot(message: Message, state: FSMContext):
             try:
                 await message.answer('Бот запущен с выбранными настройками, ожидайте результатов!',
                                      reply_markup=reply_menu.stop)
-                await state.set_state(DataSteps.START)
+                await state.set_state(DataSteps.LAUNCH)
                 await main(login, password, proxy, user, pass_proxy, fight, items, catch, gender, pokebol, shine, state)
             except ExCheat as dc:
                 await message.answer(f'{dc}', reply_markup=reply_menu.menus)
-                await state.set_state(None)
+                await state.set_state(DataSteps.START)
             except TargetClosedError:
                 await message.answer('Бот остановлен!', reply_markup=reply_menu.menus)
-                await state.set_state(None)
+                await state.set_state(DataSteps.START)
             except Exception as er:
-                logging.error(str(er))
                 if len(str(er)) > 3500:
+                    logging.error(str(er))
                     await message.answer(f'Бот был остановлена из за ошибки: \n ``` {er[:3500]} ```',
                                          reply_markup=reply_menu.menus,
                                          parse_mode='MarkdownV2')
+                elif 'net::ERR_ABORTED; maybe frame was detached?' in str(er):
+                    await message.answer('Бот остановлен!', reply_markup=reply_menu.menus)
+                    await state.set_state(DataSteps.START)
                 else:
+                    logging.error(str(er))
                     await message.answer(f'Бот был остановлена из за ошибки: \n ``` {er} ```',
                                          reply_markup=reply_menu.menus,
                                          parse_mode='MarkdownV2')
-                await state.set_state(None)
+                await state.set_state(DataSteps.START)
     else:
         await message.answer('В данный момент проводятся Технические Работы, ожидайте пожалуйста новостей!')
 
@@ -182,7 +129,13 @@ async def start_pw_bot(message: Message, state: FSMContext):
 async def stop_browser(message: Message, state: FSMContext):
     if message.text == '⛔Остановить':
         date = await state.get_data()
-        browser = date['p_browser']
-        await browser.close()
+        if not date.get('p_browser') is None:
+            browser = date['p_browser']
+            await browser.close()
     else:
         await message.answer('Такая команда у меня отсутствует...', reply_markup=reply_menu.stop)
+
+
+async def none_state(message: Message, state: FSMContext):
+    await message.answer('Извините, бот только что проснулся! ;\n\nПовторите заново)', reply_markup=reply_menu.menus)
+    await state.set_state(DataSteps.START)

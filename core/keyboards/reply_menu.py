@@ -1,20 +1,24 @@
 from aiogram.types import ReplyKeyboardMarkup, KeyboardButton
+from aiogram.types.web_app_info import WebAppInfo
 
 menus = ReplyKeyboardMarkup(keyboard=[
     [
         KeyboardButton(
-            text='👤Аккаунт'
-        )
+            text='🏳️Помощь'
+        ),
     ],
     [
         KeyboardButton(
-            text='📠Обратная связь'
+            text='👤Аккаунт'
         ),
         KeyboardButton(
             text='⚙Настройки'
         ),
         KeyboardButton(
-            text='🏳️Помощь'
+            text='🎮Игра',
+            web_app=WebAppInfo(
+                url='https://pokepower.ru'
+            )
         )
     ],
     [
@@ -30,7 +34,7 @@ inputs = ReplyKeyboardMarkup(keyboard=[
             text='♻Очистить'
         ),
         KeyboardButton(
-            text='◀Назад'
+            text='◀Вернуться'
         )
     ]
 ], resize_keyboard=True)

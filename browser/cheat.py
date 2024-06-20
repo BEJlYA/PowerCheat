@@ -11,10 +11,6 @@ class ExCheat(Exception):
 
 async def main(login, password, proxy, user, pass_proxy, fight, items, catch, gender, pokeball, shine, state, f=0):
     async with async_playwright() as pw:
-        if fight == 'Отсутствует' or fight < 0:
-            fight = 200
-        elif fight > 1500:
-            fight = 1500
         browser = await pw.firefox.launch(proxy={'server': 'per-context'})
         context = await browser.new_context(proxy={'server': f'{proxy}', 'username': f'{user}', 'password': f'{pass_proxy}'})
         page = await context.new_page()
@@ -47,7 +43,7 @@ async def main(login, password, proxy, user, pass_proxy, fight, items, catch, ge
                     f, p = await functions.catch_gender(page, targets, namepok, pokeball_path, f, p)  # Catches one select gender pokemons
                 elif namepok.lower()[4:] in targets and gender == 'zero' and await page.is_visible(
                         "//span[contains(text(),'Можно поймать')]") and p < 6:
-                    f, p = await functions.catch_all(page, targets, namepok, pokeball_path, f, p)  # Catches all genders pokemons
+                    f, p = await functions.catch_all(page, targets, namepok, pokeball_path, f, p)  # Catches all genders Pokémon
                 elif namepok not in other.runners_list or not await page.is_visible(
                         "//div[@class='PokemonB']//div[@class='pok1-color namePokemon Name __name']") and not await page.is_visible(
                         "//span[contains(text(),'Можно поймать')]") or not namepok.lower()[4:] in targets and not gender == gendcat or not namepok.lower()[4:] in targets and not gender == 'zero':

@@ -242,7 +242,7 @@ async def catch_all(page, targets, namepok, path, f, p):
 async def fights(page, namepok, icon_type, type_chart, targets, f, pp=3, hp_bar=41):
     while True:
         if await page.is_visible('//*[@id="battleMap"]/div/div[2]/div[2]//img[@src="/img/load_pika.gif"]'):
-            await page.wait_for_timeout(400)
+            await page.wait_for_timeout(100)
         elif await page.is_visible(
                 "//*[@id='battleMap']/div/div[3]/div[3]/div/div/div[2]/span[text()='Нет эффекта от атаки.']"
         ) and await page.is_visible('.Battle'):
@@ -260,8 +260,7 @@ async def fights(page, namepok, icon_type, type_chart, targets, f, pp=3, hp_bar=
                 return f, pp, hp_bar
             types_pok = await find_types(namepok)
             max_type = await find_effectiveness(type_chart, types_pok, types)
-            if await post_attack(page, max_type, icon_type):
-                await page.wait_for_timeout(400)
+            await post_attack(page, max_type, icon_type)
 
 
 async def get_attr_heal(page, pp=0):

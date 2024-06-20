@@ -3,6 +3,7 @@ from datetime import datetime
 import aiohttp
 import aiosqlite
 from aiogram.types import Message, LabeledPrice, PreCheckoutQuery, CallbackQuery
+from aiogram.utils.markdown import hide_link
 
 from core.keyboards import inline_payments
 from core.utils.settings import setting
@@ -10,53 +11,80 @@ from core.utils.settings import setting
 
 async def one_mounth_pay(call: CallbackQuery):
     await call.bot.delete_message(call.message.chat.id, call.message.message_id)
-    await call.message.answer_invoice(title="💎Подписка 1 Месяц💎",
-                                      description="Скидка: Не действительна",
-                                      photo_url='https://i.getgems.io/md0QVCY3Sp7flUeVHAzPF4fTUmxIm6H0liM4U8FtiuU/rs:fill:512:512:1/g:ce/czM6Ly9nZXRnZW1zLXMzL3VzZXItbWVkaWEvMDYtMTEtMjAyMi82MzY2YTc3N2ViZjE1MDIxYWM3NjlkMWIvNjM2NzNlNTBlYmYxNTAyMWFjNzZhZDY3LmpwZw',
-                                      photo_size=512,
-                                      photo_width=512,
-                                      photo_height=512,
-                                      prices=[LabeledPrice(
-                                          label="XTR",
-                                          amount=369)],
-                                      provider_token='',
-                                      payload="30",
-                                      currency="XTR",
-                                      reply_markup=inline_payments.choose_payment)
+    async with aiohttp.ClientSession() as session:
+        async with session.get(f'https://proxy6.net/api/{setting.bots.api_proxy}') as response:
+            response = eval(await response.text())
+    if 99 < int(float(response['balance'])):
+        await call.message.answer_invoice(title="💎Подписка на 1 Месяц💎",
+                                          description="Скидка: Не действительна",
+                                          photo_url='https://clck.ru/3BPiKc',
+                                          photo_size=512,
+                                          photo_width=512,
+                                          photo_height=512,
+                                          prices=[LabeledPrice(
+                                              label="XTR",
+                                              amount=369)],
+                                          provider_token='',
+                                          payload="30",
+                                          currency="XTR",
+                                          reply_markup=inline_payments.choose_payment)
+    else:
+        await call.message.answer('😭Извините, в данный момент это <b>невозможно</b>!\n\nПопробуйте немного позже')
+        await call.message.bot.send_message(setting.bots.admin_id,
+                                            f'💎На балансе {hide_link("https://proxy6.net/user/balance")}всего <b>{int(float(response["balance"]))}</b> рублей!💎\n'
+                                            f'\n<b>Пожалуйста пополните баланс!</b>')
 
 
 async def two_mounth_pay(call: CallbackQuery):
     await call.bot.delete_message(call.message.chat.id, call.message.message_id)
-    await call.message.answer_invoice(title="💎Подписка 2 Месяца💎",
-                                      description="Скидка: 6%",
-                                      photo_url='https://i.getgems.io/md0QVCY3Sp7flUeVHAzPF4fTUmxIm6H0liM4U8FtiuU/rs:fill:512:512:1/g:ce/czM6Ly9nZXRnZW1zLXMzL3VzZXItbWVkaWEvMDYtMTEtMjAyMi82MzY2YTc3N2ViZjE1MDIxYWM3NjlkMWIvNjM2NzNlNTBlYmYxNTAyMWFjNzZhZDY3LmpwZw',
-                                      photo_size=512,
-                                      photo_width=512,
-                                      photo_height=512,
-                                      prices=[LabeledPrice(
-                                          label="XTR",
-                                          amount=694)],
-                                      provider_token='',
-                                      payload="60",
-                                      currency="XTR",
-                                      reply_markup=inline_payments.choose_payment)
+    async with aiohttp.ClientSession() as session:
+        async with session.get(f'https://proxy6.net/api/{setting.bots.api_proxy}') as response:
+            response = eval(await response.text())
+    if 198 < int(float(response['balance'])):
+        await call.message.answer_invoice(title="💎Подписка на 2 Месяца💎",
+                                          description="Скидка: 6%",
+                                          photo_url='https://clck.ru/3BPiKc',
+                                          photo_size=512,
+                                          photo_width=512,
+                                          photo_height=512,
+                                          prices=[LabeledPrice(
+                                              label="XTR",
+                                              amount=694)],
+                                          provider_token='',
+                                          payload="60",
+                                          currency="XTR",
+                                          reply_markup=inline_payments.choose_payment)
+    else:
+        await call.message.answer('😭Извините, в данный момент это <b>невозможно</b>!\n\nПопробуйте немного позже')
+        await call.message.bot.send_message(setting.bots.admin_id,
+                                            f'💎На балансе {hide_link("https://proxy6.net/user/balance")}всего <b>{int(float(response["balance"]))}</b> рублей!💎\n'
+                                            f'\n<b>Пожалуйста пополните баланс!</b>')
 
 
 async def three_mounth_pay(call: CallbackQuery):
     await call.bot.delete_message(call.message.chat.id, call.message.message_id)
-    await call.message.answer_invoice(title="💎Подписка 3 Месяца💎",
-                                      description="Скидка: 10%",
-                                      photo_url='https://i.getgems.io/md0QVCY3Sp7flUeVHAzPF4fTUmxIm6H0liM4U8FtiuU/rs:fill:512:512:1/g:ce/czM6Ly9nZXRnZW1zLXMzL3VzZXItbWVkaWEvMDYtMTEtMjAyMi82MzY2YTc3N2ViZjE1MDIxYWM3NjlkMWIvNjM2NzNlNTBlYmYxNTAyMWFjNzZhZDY3LmpwZw',
-                                      photo_size=512,
-                                      photo_width=512,
-                                      photo_height=512,
-                                      prices=[LabeledPrice(
-                                          label="XTR",
-                                          amount=996)],
-                                      provider_token='',
-                                      payload="90",
-                                      currency="XTR",
-                                      reply_markup=inline_payments.choose_payment)
+    async with aiohttp.ClientSession() as session:
+        async with session.get(f'https://proxy6.net/api/{setting.bots.api_proxy}') as response:
+            response = eval(await response.text())
+    if 297 < int(float(response['balance'])):
+        await call.message.answer_invoice(title="💎Подписка на 3 Месяца💎",
+                                          description="Скидка: 10%",
+                                          photo_url='https://clck.ru/3BPiKc',
+                                          photo_size=512,
+                                          photo_width=512,
+                                          photo_height=512,
+                                          prices=[LabeledPrice(
+                                              label="XTR",
+                                              amount=996)],
+                                          provider_token='',
+                                          payload="90",
+                                          currency="XTR",
+                                          reply_markup=inline_payments.choose_payment)
+    else:
+        await call.message.answer('😭Извините, в данный момент это <b>невозможно</b>!\n\nПопробуйте немного позже')
+        await call.message.bot.send_message(setting.bots.admin_id,
+                                            f'💎На балансе {hide_link("https://proxy6.net/user/balance")}всего <b>{int(float(response["balance"]))}</b> рублей!💎\n'
+                                            f'\n<b>Пожалуйста пополните баланс!</b>')
 
 
 async def on_pre_checkout_query(pre_checkout_query: PreCheckoutQuery):

@@ -4,7 +4,7 @@ choose_term = InlineKeyboardMarkup(inline_keyboard=[
     [
         InlineKeyboardButton(
             text='1️⃣',
-            callback_data='one_mounth'
+            callback_data='one_mounth',
         ),
         InlineKeyboardButton(
             text='2️⃣',
