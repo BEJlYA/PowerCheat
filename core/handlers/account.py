@@ -60,6 +60,7 @@ async def get_password(message: Message, state: FSMContext):
         await state.set_state(DataSteps.ACCOUNT)
         await account(message, state)
     else:
+        await message.bot.delete_message(message.chat.id, message.message_id)
         await message.answer('Пароль принят для обработки!', reply_markup=reply_accounts.accou)
         async with aiosqlite.connect('data/users.db') as db:
             await db.execute("""UPDATE profiles SET password = ? WHERE chat_id = ?""", (message.text, message.chat.id,))

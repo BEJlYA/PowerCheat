@@ -36,7 +36,7 @@ async def get_fight(message: Message, state: FSMContext):
         await menu.settings(message, state)
     elif message.text == '♻Очистить':
         async with aiosqlite.connect('data/users.db') as db:
-            await db.execute("""UPDATE profiles SET fight = '1500' WHERE chat_id = ?""", (message.chat.id,))
+            await db.execute("""UPDATE profiles SET fight = 1500 WHERE chat_id = ?""", (message.chat.id,))
             await db.commit()
         await state.set_state(DataSteps.SETTING)
         await menu.settings(message, state)
@@ -160,7 +160,7 @@ async def get_shines(message: Message, state: FSMContext):
 async def clear_st(message: Message):
     async with aiosqlite.connect('data/users.db') as db:
         await db.execute(
-            """UPDATE profiles SET fight = '1500', items = 'Отсутствует', catch = 'Отсутствует', gender = 'Отсутствует', pokebol = 'Отсутствует', shine = 'Отключено' WHERE chat_id = ?""",
+            """UPDATE profiles SET fight = 1500, items = 'Отсутствует', catch = 'Отсутствует', gender = 'Отсутствует', pokebol = 'Отсутствует', shine = 'Отключено' WHERE chat_id = ?""",
             (message.chat.id,))
         await db.commit()
     await message.answer('Все параметры очищенны!', reply_markup=reply_settings.sett)

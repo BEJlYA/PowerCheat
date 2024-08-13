@@ -23,7 +23,7 @@ async def sqlbase(message: Message):
     async with aiosqlite.connect('data/users.db') as db:
         await db.execute("""CREATE TABLE IF NOT EXISTS profiles(chat_id  INTEGER NOT NULL CONSTRAINT data_pk PRIMARY KEY,
                                             login    TEXT    DEFAULT 'Отсутствует', password TEXT    DEFAULT 'Отсутствует',
-                                            fight    integer DEFAULT '1500', items    TEXT    DEFAULT 'Отсутствует',
+                                            fight    integer DEFAULT 1500, items    TEXT    DEFAULT 'Отсутствует',
                                             catch    TEXT    DEFAULT 'Отсутствует', shine    TEXT    DEFAULT 'Отключено',
                                             gender   TEXT    DEFAULT 'Отсутствует', pokebol  TEXT    DEFAULT 'Отсутствует')""")
         await db.execute("""CREATE TABLE IF NOT EXISTS feedback(message INTEGER, chat_id INTEGER)""")
@@ -31,7 +31,13 @@ async def sqlbase(message: Message):
             """CREATE TABLE IF NOT EXISTS payments(chat_id INTEGER PRIMARY KEY, proxy_id INTEGER, time_end TEXT,
             proxy TEXT, user TEXT, pass TEXT, transaction_id TEXT)""")
         await db.commit()
+
         cursor = await db.execute("""SELECT chat_id FROM profiles WHERE chat_id = ?""", (message.chat.id,))
         if await cursor.fetchone() is None:
             await db.execute("""INSERT INTO profiles (chat_id) VALUES (?)""", (message.chat.id,))
+        await db.commit()
+
+        cursor = await db.execute("""SELECT chat_id FROM payments WHERE chat_id = ?""", (message.chat.id,))
+        if await cursor.fetchone() is None:
+            await db.execute("""INSERT INTO payments (chat_id) VALUES (?)""", (message.chat.id,))
         await db.commit()

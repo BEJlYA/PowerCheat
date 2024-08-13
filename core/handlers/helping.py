@@ -28,7 +28,7 @@ async def feedback(message: Message, state: FSMContext):
         val_fb = await cursor.fetchone()
         await db.commit()
     if message.chat.id == setting.bots.admin_id:
-        await message.answer(f'Количество обращений к разработчику: <b>{val_fb[0]}</b>\n'
+        await message.answer(f'Количество обращений: <b>{val_fb[0]}</b>\n'
                              f'Что желаете делать?', reply_markup=reply_feedbacks.answ)
         await state.set_state(DataSteps.ANSW_MENU)
     else:

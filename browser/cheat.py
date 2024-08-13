@@ -25,6 +25,8 @@ async def main(login, password, proxy, user, pass_proxy, fight, items, catch, ge
             move_path = await functions.get_path_targets(targets, rooms, location_me)
             if move_path is not None:
                 await functions.move(page, move_path)
+            else:
+                raise ExCheat('Не найден верный путь😵\nПроверьте правильность указанных данных!')
         await page.click('//div[@class="Button NoActive" and @onclick="PP.fight.setHunt(this,1);"]')
         while True:
             if await page.is_visible('.BtnAuth'):

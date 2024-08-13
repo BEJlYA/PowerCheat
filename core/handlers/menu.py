@@ -137,5 +137,5 @@ async def stop_browser(message: Message, state: FSMContext):
 
 
 async def none_state(message: Message, state: FSMContext):
-    await message.answer('Извините, бот только что проснулся! ;\n\nПовторите заново)', reply_markup=reply_menu.menus)
+    await message.answer('Извините, бот только что проснулся после Технических работ! 😉\n\nПожалуйста повторите заново', reply_markup=reply_menu.menus)
     await state.set_state(DataSteps.START)
