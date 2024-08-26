@@ -1,6 +1,3 @@
-/data/tokens.env
 /data/users.db
-/logs/project.log
 venv/
 .idea/
-/logs/info.log
